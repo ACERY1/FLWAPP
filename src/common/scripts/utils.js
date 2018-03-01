@@ -23,6 +23,9 @@ const debounce = (fn, boomTime) => {
  * @return {boolean}
  */
 const isPhoneNumber = (phoneNumber) => {
+	if (phoneNumber.toString().length > 11) {
+		return false
+	}
 	let reg = /1\d{10}/
 	return reg.test(phoneNumber.toString())
 }
@@ -68,10 +71,32 @@ const countFn = (countTime, basicMs, progressFn, callBackFn) => {
 	}
 }
 
+/* TODO 需要写测试用例 */
+/**
+ * 检验exampleObj的key是否都在ruleObj
+ * @param ruleObj
+ * @param exampleObj
+ * @return {boolean}
+ */
+const verifyParams = (ruleObj, exampleObj) => {
+	let params = []
+	for (let key of Object.keys(ruleObj)) {
+		if (!exampleObj[key]) {
+			params.push(key)
+		}
+	}
+	if (params.length) {
+		console.log('Lack arguments：', params)
+		return true // 缺少参数
+	}
+	return false
+}
+
 export {
 	debounce,
 	isPhoneNumber,
 	isInviteCode,
 	isVerifyCode,
-	countFn
+	countFn,
+	verifyParams
 }

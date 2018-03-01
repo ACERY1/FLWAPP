@@ -1,6 +1,6 @@
 import ajax from './ajax'
 
-const test = () => {
+const Test = () => {
 	return ajax('/test', 'get', {a: 1, b: 2})
 }
 
@@ -62,15 +62,22 @@ const UserRegister = (phone, inviteCode) => {
 // const = ()=>{
 // 	return ajax('','get',{})
 // }
+//	const UpLoadUrl = '/storage/credit/up'
+//	const DownLoadUrl = '/storage/credit/down/qqq'
 
-// const = ()=>{
-// 	return ajax('','get',{})
-// }
+//	const FileUpLoad = (url) => {
+//		return ajax(UpLoadUrl, 'get')
+//	}
+//	const FileDownLoad = (url) => {
+//		return ajax(DownLoadUrl, 'get')
+//	}
 export {
-	test,
+	Test,
 	UserLogin,
 	UserVerifyCode,
 	UserVerifyCodeCheck,
 	UserRegister,
 	UserInviteCodeCheck
+	//	FileUpLoad,
+	//	FileDownLoad
 }

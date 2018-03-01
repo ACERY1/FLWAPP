@@ -1,0 +1,62 @@
+<style lang="scss" type="text/scss">
+  @import "../../common/styles/mixins";
+  @import "../../common/styles/variables";
+  @import "../../common/styles/common";
+  .c-show-main {
+    display: inline-flex;
+    margin-left: 95rpx;
+    margin-right: 95rpx;
+  }
+  .c-show-item-img {
+    width: 60rpx;
+    height: 60rpx;
+  }
+  .c-show-item {
+    display:flex;
+    flex-flow: column nowrap;
+    justify-content: center; 
+    width: 250rpx;
+  }
+  .c-show-item {
+    &-name {
+      font-size: 32rpx;
+      color: #333333;
+    }
+    &-number {
+      font-size: 24rpx;
+      color: #666666;
+    }
+  }
+</style>
+
+<template>
+  <ul class="c-show-main">
+    <repeat for="{{showDatas}}">
+      <div class="c-show-item">
+        <image src="{{item.src}}" class="c-show-item-img"/>
+        <div class="c-show-item-name">{{item.name}}</div>
+        <div class="c-show-item-number">{{item.number}}</div>
+      </div>
+    </repeat>
+  </ul>
+</template>
+
+<script>
+  import wepy from 'wepy'
+
+  export default class Exhibits extends wepy.component {
+    components = {}
+    datas = {}
+    computed = {}
+
+    customFunction () {}
+
+    methods = {}
+
+    onLoad () {}
+    events = {}
+    props = {
+      showDatas: Array
+    }
+  }
+</script>

@@ -1,61 +1,99 @@
 <style lang="scss" type="text/scss">
-  .main {
-    margin-top: 30rpx;
+  .centerInfomation {
+    margin-top: 20rpx;
+    border-bottom: 400rpx solid #f4f4f4;
   }
+  .centerInfomation-Module {
+    &-1 {
+      height: 240rpx;
+    }
+    &-2 {
+      height: 180rpx;
+    }
+    &-3 {
+      margin-top: 20rpx;
+    }
+  }
+  .centerInfomation-Tag {
+    width: 24rpx;
+    height: 48rpx;
+  }
+
 </style>
 
 <template>
-  <view class="main">
-    <Info :infoDatas="infoDatas"></Info>
-    <!--<Show></Show>-->
-    <Menu :menuList="menuList"></Menu>
+  <view class="centerInfomation">
+    <Info class="centerInfomation-Module-1" :infoDatas="infoDatas"></Info>
+    <Show class="centerInfomation-Module-2" :showDatas="showDatas"></Show>
+    <Menu class="centerInfomation-Module-3" :menuList="menuList"></Menu>
   </view>
 </template>
 
 <script>
-  import wepy from 'wepy'
+	import page from '../base/basicPage.wpy'
   import GeneralIntroduction from '../../components/Menus/GeneralIntroduction'
   import MenuItems from '../../components/Menus/MenuItem'
-  //  import Exhibits from '../../components/Menus/Exhibits'
-  import { debounce } from '../../common/scripts/utils'
-  import { jumpTo } from '../../common/scripts/wxUtil'
+  import Exhibits from '../../components/Menus/show'
+//  import { debounce } from '../../common/scripts/utils'
+//  import { jumpTo } from '../../common/scripts/wxUtil'
 
-  export default class Home extends wepy.page {
+  export default class Home extends page {
     config = {}
     components = {
       Info: GeneralIntroduction,
-      //  Show: Exhibits,
+      Show: Exhibits,
       Menu: MenuItems
     }
     data = {
       menuList: [
         {
           unique: 'record',
-          value: '花迹'
+          value: '我的花迹',
+          imgUrl: '../../static/images/我的花迹.png'
         },
         {
           unique: 'application',
-          value: '申请活动'
+          value: '申请活动',
+          imgUrl: '../../static/images/申请活动.png'
         },
         {
           unique: 'message',
-          value: '消息通知'
+          value: '消息通知',
+          imgUrl: '../../static/images/消息通知.png'
         },
         {
           unique: 'problem',
-          value: '问题反馈'
+          value: '问题反馈',
+          imgUrl: '../../static/images/问题反馈.png'
         }
       ],
       infoDatas: {
         avatarUrl: '../../static/images/logo.png',
-        name: 'XXX',
+        name: '马化腾',
         university: '西安电子科技大学',
         major: '软件工程',
-        company: 'Tecent',
+        company: '腾讯控股有限公司',
         position: 'CEO',
-        stateClass: 'success',
-        stateTitle: '已审核'
-      }
+        stateClass: 'failed',
+        stateTitle: '审核失败'
+      },
+      showDatas: [
+        {
+          name: '小红花',
+          number: '0/10' + ' 朵',
+          src: '../../static/images/小红花.png'
+        },
+        {
+          name: '捐赠学生',
+          number: '5' + ' 人',
+          src: '../../static/images/捐赠学生.png'
+        },
+        {
+          name: '沙漏',
+          number: '5' + ' 小时',
+          src: '../../static/images/沙漏.png'
+        }
+      ]
     }
     computed = {}
 
@@ -70,10 +108,10 @@
     customData = {}
     methods = {}
     events = {
-      'menu-click': debounce((key, event) => {
+      'menu-click': this.$UTIL.debounce((key, event) => {
         if (key === 'record') {
           console.log('前往花迹')
-          jumpTo('./login')
+          this.$WX.jumpTo('./login')
         }
         if (key === 'application') {
           console.log('前往申请活动')
@@ -85,8 +123,16 @@
           console.log('前往问题反馈')
         }
       }, 200),
-      'change-information': debounce((key, event) => {
-        console.log('前往个人信息页')
+      'change-information': this.$UTIL.debounce((key, event) => {
+        this.$WX.jumpTo('./info')
+        if (key === 'student') {
+          console.log('前往学生个人信息修改页')
+          //  跳转到修改页
+        }
+        if (key === 'teather') {
+          console.log('前往导师个人信息修改页')
+          //  跳转到修改页
+        }
       }, 200)
     }
   }

@@ -1,0 +1,341 @@
+<style lang="scss" type="text/scss">
+	@import "../../common/styles/variables";
+	@import "../../common/styles/mixins";
+	@import "../../common/styles/animate";
+  @import "../../common/styles/common";
+
+  .info-container {
+    display: flex;
+    flex-flow: column nowrap;
+    padding-left: 30rpx;
+  }
+  .info-item-container {
+    @include fontSizeColor(32rpx, #333333);
+    height: 88rpx;
+    border-bottom: 2rpx solid #f4f4f4;
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+  }
+  .info-item-container {
+    display: flex;
+    flex-flow: row nowrap;
+  }
+
+  .info-item-name {
+    width: 310rpx;
+  }
+  .info-item-input {
+    text-align:right;
+    @include fontSizeColor(32rpx, #666666);
+  }
+  .Info-Tag {
+    width: 20rpx;
+    height: 40rpx;
+    //  padding-bottom:6rpx;
+    padding-right: 10rpx;
+    padding-left: 10rpx;
+    margin-bottom: -5rpx;
+  }
+  .info-item-avatar-container {
+    height: 160rpx;
+    padding-left: 30rpx;
+  }
+  .info-item-avatar-img {
+    position: absolute;
+    right: 60rpx;
+    width: 100rpx;
+    height: 100rpx;
+    border-radius: 50%;
+  }
+  .info-tag-value {
+    //position: relative;
+    //top: -20px;
+    label {
+      @include fontSizeColor(32rpx, #666666);
+      position: absolute;
+      width: 590rpx;
+      text-align: right;
+      right: 70rpx;
+    }
+    image {
+      position: absolute;
+      right: 30rpx;
+    }
+  }
+  .info-module {
+    height: 60rpx;
+    border-top: 20rpx solid #f4f4f4;
+    &-title {
+      font-size: 28rpx;
+      color: #999999;
+    }
+    &-title-son {
+      font-size: 24rpx;
+      color: #999999;
+    }
+    &-title-Icon {
+      height: 40rpx;
+      max-width: 10rpx;
+      margin-right: 20rpx;
+      margin-left: 30rpx;
+      background-color: #e10b1c;
+      color: #e10b1c;
+    }
+  }
+  .info-textarea {
+    height: 340rpx;
+    border: 2rpx solid #b7c6cd;
+    box-shadow: inset 0 2px 4px 0 hsla(0, 0%, 0%, 0.08);
+    border-radius: 12rpx;
+    width: 680rpx;
+    @include fontSizeColor(32rpx, #666666);
+  }
+  .info-textarea-count {
+    font-size: 20rpx;
+    color: #999;
+    padding:10rpx;
+    margin-left: 620rpx;
+  }
+  .info-item-avatar-tag {
+    position: absolute;
+    right: 30rpx;
+  }
+  .fuck {
+    font-size: 20rpx;
+    color: #999999;
+  }
+  .info-module-attachment {
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: center;
+    align-items: center;
+    height: 280rpx;
+    image {
+      height: 80rpx;
+      width: 80rpx;
+      padding-bottom: 20rpx;
+    }
+    span {
+      @include fontSizeColor(22rpx, #999999);
+    }
+    div {
+      width: 750rpx;
+      display: inline-flex;
+      margin-top: 20rpx;
+      button {
+        @include fontSizeColor(28rpx, #e01b1c);
+        width: 375rpx;
+        height: 80rpx;
+        padding-left: 70rpx;
+        padding-right: 70rpx;
+        background-color: #fff;
+        &:active {
+          background-color: #bfbfbf;
+        }
+        &::after {
+          border: none;
+        }
+      }
+    }
+  }
+</style>
+<template>
+  <view>
+    <view class="info-module">
+      <div class="info-module-title-Icon">1</div>
+      <span class="info-module-title">基本资料</span>
+      <span class="info-module-title-son">（请务必填写）</span>
+    </view>
+    <div class="info-item-container info-item-avatar-container">
+        <label class="info-item-name">头像</label>
+        <image src="{{avatarUrl}}" class="info-item-avatar-img" alt="我的头像" @tap="changeAvatar"/>
+        <image src="../../static/images/u125.png" class="Info-Tag info-item-avatar-tag" @tap="changeAvatar"/>
+    </div>
+    <ul class="info-container">
+      <repeat for="{{optionList}}" item="item" index="index">
+        <div class="info-item-container">
+          <view wx:if="{{item.type === 'picker'}}">
+            <label class="info-item-name info-item-repair-name">{{item.name}}</label>
+            <div class="info-tag-value">
+              <label class="">{{item.value}}</label>
+              <image class="Info-Tag" src="../../static/images/u125.png" />
+            </div>
+          </view>
+          <view wx:if="{{item.type === 'input'}}" class="info-item-container">
+            <label class="info-item-name">{{item.name}}</label>
+            <input placeholder="{{item.value}}" class="info-item-input" />
+          </view>
+        </div>
+      </repeat>
+    </ul>
+  </view>
+  <view>
+    <view class="info-module">
+      <div class="info-module-title-Icon">1</div>
+      <span class="info-module-title">身份认证</span>
+      <span class="info-module-title-son">（审核学生身份必备，其他用户无法查看）</span>
+    </view>
+    <ul class="info-container">
+      <repeat for="{{identityList}}" item="item" index="index">
+        <div class="info-item-container">
+          <view wx:if="{{item.type === 'picker'}}">
+            <label class="info-item-name info-item-repair-name">{{item.name}}</label>
+            <div class="info-tag-value">
+              <label class="">{{item.value}}</label>
+              <image class="Info-Tag" src="../../static/images/u125.png" />
+            </div>
+          </view>
+          <view wx:if="{{item.type === 'input'}}" class="info-item-container">
+            <label class="info-item-name">{{item.name}}</label>
+            <input placeholder="{{item.value}}" class="info-item-input"/>
+          </view>
+        </div>
+      </repeat>
+    </ul>
+  </view>
+  <view>
+    <view class="info-module">
+      <div class="info-module-title-Icon">1</div>
+      <span class="info-module-title">个人简历</span>
+    </view>
+    <div class="info-container">
+      <textarea class="info-textarea" value="what the fuck"/>
+      <span class="info-textarea-count">123/600</span>
+    </div>
+  </view>
+  <view>
+    <view class="info-module">
+      <div class="info-module-title-Icon">1</div>
+      <span class="info-module-title">问题：你的梦想是什么？</span>
+    </view>
+    <div class="info-container">
+      <textarea class="info-textarea" value="what the fuck"/>
+      <span class="info-textarea-count">/200</span>
+    </div>
+  </view>
+  <view>
+    <view class="info-module">
+      <div class="info-module-title-Icon">1</div>
+      <span class="info-module-title">附件</span>
+    </view>
+    <view class="info-module-attachment">
+      <image src="../../static/images/附件.png" />
+      <span>上传</span>
+      <div>
+        <button @tap="ButtonClick" id="save" class="add-center-border">保存</button>
+        <button @tap="ButtonClick" id="upload">提交</button>
+      </div>
+    </view>
+  </view>
+
+</template>
+
+<script>
+	import page from '../base/basicPage.wpy'
+	// import { chooseAvatar } from '../../common/scripts/wxUtil'
+export default class Info extends page {
+  config = {}
+  components = {}
+  data = {
+    optionList: [
+      {
+        name: '真实姓名',
+        type: 'input',
+        value: '马化腾'
+      },
+      {
+        name: '出生年月',
+        type: 'picker',
+        value: '2000-1-1'
+      },
+      {
+        name: '性别',
+        type: 'picker',
+        value: '男'
+      },
+      {
+        name: '学校',
+        type: 'picker',
+        value: '西安电子科技大学'
+      },
+      {
+        name: '学历',
+        type: 'picker',
+        value: '博士后'
+      },
+      {
+        name: '学院',
+        type: 'input',
+        value: '软件学院'
+      },
+      {
+        name: '专业',
+        type: 'input',
+        value: '软件工程'
+      },
+      {
+        name: '入学时间',
+        type: 'picker',
+        value: '2012-1-1'
+      },
+      {
+        name: '申请方向',
+        type: 'input',
+        value: '区块链'
+      },
+      {
+        name: '一句话介绍自己',
+        type: 'input',
+        value: '我，秦始皇，打钱'
+      }
+    ],
+    identityList: [
+      {
+        name: '学号',
+        type: 'input',
+        value: '12130110001'
+      },
+      {
+        name: '身份证号',
+        type: 'input',
+        value: '611212199503021232'
+      }, {
+        name: '银行卡账号',
+        type: 'input',
+        value: '202983471290834710'
+      }
+    ],
+    avatarUrl: '../../static/images/logo.png'
+  }
+  computed = {}
+
+  onLoad () {}
+
+  onShow () {}
+  props = {}
+  customData = {}
+  methods = {
+    ButtonClick (event) {
+      if (event.target.id === 'save') {
+        wx.showToast({
+          title: '已保存',
+          icon: 'success',
+          duration: 2000
+        })
+      }
+      if (event.target.id === 'upload') {
+        wx.showToast({
+          title: '已提交',
+          icon: 'success',
+          duration: 1500
+        })
+      }
+    }
+  }
+  changeAvatar (event) {
+    this.$WX.chooseAvatar(this, 'avatarUrl')
+  }
+  events = {}
+}
+</script>
