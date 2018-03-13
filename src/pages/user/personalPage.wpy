@@ -1,0 +1,53 @@
+<style lang="scss" type="text/scss">
+	@import "../../common/styles/mixins";
+	@import "../../common/styles/variables";
+
+	.personPage{
+
+	}
+
+	.card{
+		&-container{
+			@include allMidBox();
+		}
+		/* 用户图片的底部红色 */
+		&-base {
+			height: 200rpx;
+			background: $red_new;
+		}
+		&-main {
+			margin-top: -170rpx;
+		}
+	}
+</style>
+
+<template>
+		<view class="card-base"></view>
+		<view class="card-container">
+			<usrCard class="card-main"></usrCard>
+		</view>
+
+</template>
+
+<script>
+	import page from '../base/basicPage.wpy'
+	import userCard from '../../components/Cards/userCard'
+
+	export default class PersonalPage extends page {
+		config = {}
+		components = {
+			usrCard: userCard
+		}
+		data = {}
+		computed = {}
+
+		onLoad () {}
+
+		onShow () {}
+
+		customFunction () {}
+
+		methods = {}
+		events = {}
+	}
+</script>

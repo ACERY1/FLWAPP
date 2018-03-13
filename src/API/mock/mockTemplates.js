@@ -1,4 +1,30 @@
 /* 手动添加返回数据示例 */
+const StudentCenter = {
+	'code': 0,
+	'msg': '成功',
+	'data': {
+		'name': 'Van',
+		'status': 1
+	}
+}
+const StudentProfile = {
+	'code': 0,
+	'msg': '成功',
+	'data': {
+		'name': 'Van'
+	}
+}
+const TutorProfile = {
+	'code': 0,
+	'msg': '成功',
+	'data': {}
+}
+const TutorCenter = {
+	'code': 0,
+	'msg': '成功',
+	'data': {}
+}
+
 const UserLogin = {
 	'code': 0,
 	'msg': '登录成功',
@@ -6,7 +32,6 @@ const UserLogin = {
 		'role': 1
 	}
 }
-
 const UserInviteCodeCheck = {
 	'code': 0,
 	'msg': '邀请码可用'
@@ -36,11 +61,16 @@ const Test = {
 	]
 }
 
+/* 下面的arguments要和APIList里的api-key一一映射 */
 export {
 	UserLogin,
 	UserInviteCodeCheck,
 	UserVerifyCode,
 	UserVerifyCodeCheck,
 	UserRegister,
+	StudentCenter,
+	TutorCenter,
+	StudentProfile,
+	TutorProfile,
 	Test
 }

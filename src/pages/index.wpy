@@ -44,21 +44,21 @@
 		components = {}
 
 		onLoad () {
-//			UserLogin()
-//				.then(
-//					data => (console.log(data))
-//				)
-//				.catch((err) => {
-//					console.log(err.errMsg)
-//				})
-//			wxLogin().then(data => (console.log(data)))
-//			wxGetUserInfo().then(data => (console.log(data)))
+			const that = this
+			this.$WX.setStorage('role', 1)
+			this.$WX.wxLogin().then((res) => {
+				wx.getUserInfo({
+					success: function() {
+						that.$WX.jumpTo('account/home')
+					}
+				})
+			})
 		}
 
-		onShow () {
-			this.$WX.jumpTo('account/info')
+		onReady () {
+		//	
+//			this.$WX.jumpTo('user/personalPage')
 		}
-
 		data = {
 			logoURL: '../static/images/logo.png'
 		}

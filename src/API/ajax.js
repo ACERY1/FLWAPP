@@ -1,4 +1,4 @@
-import MockServer from './mock/mockServer.js' // mock数据服务
+// import MockServer from './mock/mockServer.js' // mock数据服务：弃用
 import Route from './mock/route' // mock数据服务
 import { toast, getStorage, setStorage } from '../common/scripts/wxUtil'
 import statusCodeFilter from './statusCodeFilter'
@@ -25,6 +25,7 @@ function _configRequest (config = {}) {
 		}
 		config.success = res => {
 			if (res.statusCode !== 200) {
+				console.log(res)
 				statusCodeFilter(res.statusCode, (header) => {
 					config.header = _configHeader(header)
 					_configRequest(config)
@@ -38,6 +39,8 @@ function _configRequest (config = {}) {
 			if (res.data.code) {
 				toast(res.data.msg)
 			}
+			/* TEST放出header里面的token为了做测试 */
+			//	res.data.token = res.header['Authorization']
 			/* 在这里进行的返回的，那么在此之前完成重请求就可以 */
 			resolve(res.data)
 		}
@@ -140,8 +143,7 @@ export default (rurl = argumentsErr(), method = argumentsErr(), data = null, hea
 		}
 	} else {
 		console.log('[HTTP Request]: request interrupted by mockServer')
-		/* TODO 重构后的测试接口 */
-		// return Route(rurl)
-		return MockServer(rurl)
+		return Route(rurl)
+		//	return MockServer(rurl) // 旧版：已弃用
 	}
 }

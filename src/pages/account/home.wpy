@@ -23,9 +23,9 @@
 
 <template>
   <view class="centerInfomation">
-    <Info class="centerInfomation-Module-1" :infoDatas="infoDatas"></Info>
-    <Show class="centerInfomation-Module-2" :showDatas="showDatas"></Show>
-    <Menu class="centerInfomation-Module-3" :menuList="menuList"></Menu>
+    <Info class="centerInfomation-Module-1" :infoDatas.sync="infoDatas" :isStudent.sync="isStudent"></Info>
+    <Show class="centerInfomation-Module-2" :showDatas.sync="showDatas" :isStudent.sync="isStudent"></Show>
+    <Menu class="centerInfomation-Module-3" :menuList.sync="menuList" :isStudent.sync="isStudent"></Menu>
   </view>
 </template>
 
@@ -34,11 +34,11 @@
   import GeneralIntroduction from '../../components/Menus/GeneralIntroduction'
   import MenuItems from '../../components/Menus/MenuItem'
   import Exhibits from '../../components/Menus/show'
-//  import { debounce } from '../../common/scripts/utils'
-//  import { jumpTo } from '../../common/scripts/wxUtil'
 
   export default class Home extends page {
-    config = {}
+    config = {
+      navigationBarTitleText: '个人中心'
+    }
     components = {
       Info: GeneralIntroduction,
       Show: Exhibits,
@@ -49,88 +49,190 @@
         {
           unique: 'record',
           value: '我的花迹',
-          imgUrl: '../../static/images/我的花迹.png'
+          imgUrl: '../../static/images/personalCenter/我的花迹.png'
         },
         {
           unique: 'application',
           value: '申请活动',
-          imgUrl: '../../static/images/申请活动.png'
+          imgUrl: '../../static/images/personalCenter/申请活动.png'
         },
         {
           unique: 'message',
           value: '消息通知',
-          imgUrl: '../../static/images/消息通知.png'
+          imgUrl: '../../static/images/personalCenter/消息通知.png'
         },
         {
           unique: 'problem',
-          value: '问题反馈',
-          imgUrl: '../../static/images/问题反馈.png'
+          value: '在线客服',
+          imgUrl: '../../static/images/personalCenter/问题反馈.png'
         }
       ],
-      infoDatas: {
-        avatarUrl: '../../static/images/logo.png',
-        name: '马化腾',
-        university: '西安电子科技大学',
-        major: '软件工程',
-        company: '腾讯控股有限公司',
-        position: 'CEO',
-        stateClass: 'failed',
-        stateTitle: '审核失败'
-      },
-      showDatas: [
+      infoDatas: {},
+      showDatas: [],
+      isStudent: false
+    }
+    computed = {}
+    treatAjaxDatasStudent (data) {
+      let status = 1
+      if (this.$WX.getStorage('status') === 0 && data.status === 1) {
+        status = 0
+        return
+      } else if (data.status === 2) {
+        this.$WX.setStorage('status', 2)
+        status = 2
+      }
+      this.infoDatas = {
+        name: data.name || '',
+        avatar: data.avatar || '../../static/images/logo.png',
+        schoolId: data.schoolId || '0',
+        profession: data.profession || '请填写',
+        status: status
+      }
+      this.showDatas = [
         {
           name: '小红花',
-          number: '0/10' + ' 朵',
-          src: '../../static/images/小红花.png'
+          src: '../../static/images/personalCenter/小红花.png',
+          number: data.redFlowerNum || 0 + ' 朵',
+          id: 'redFlower'
+        },
+        {
+          name: '导师',
+          src: '../../static/images/personalCenter/导师.png',
+          number: data.tutorNum || 0 + ' 人',
+          id: 'tutor'
+        },
+        {
+          name: '义工',
+          src: '../../static/images/personalCenter/义工.png',
+          number: data.workedTime || 0 + ' 小时',
+          id: 'workedTime'
+        }
+      ]
+      //  this.$WX.setStorage('redFlowerNum', data.redFlowerNum)
+      this.$apply()
+    }
+    treatAjaxDatasTutor (data) {
+      let status
+      if (this.$WX.getStorage('status') === 0 && data.status === 1) {
+        this.showDatas = data.showDatas
+        this.$WX.setStorage('redFlowerNum', data.redFlowerNum)
+        this.$apply()
+        status = 0
+        return
+      } else if (data.status === 2) {
+        this.$WX.setStorage('status', 2)
+        status = 2
+      } else {
+        status = 1
+      }
+      console.log(status)
+      this.infoDatas = {
+        name: data.name || '请填写',
+        avatar: data.avatar || '../../static/images/logo.png',
+        isTutor: data.isTutor || 0,
+        trade: data.trade || '请填写',
+        company: data.company || '请填写',
+        position: data.position || '请填写'
+      }
+      this.showDatas = [
+        {
+          name: '小红花',
+          src: '../../static/images/personalCenter/小红花.png',
+          number: data.redFlowerNum || 0 + ' 朵',
+          id: 'redFlower'
         },
         {
           name: '捐赠学生',
-          number: '5' + ' 人',
-          src: '../../static/images/捐赠学生.png'
+          src: '../../static/images/personalCenter/捐赠学生.png',
+          number: data.stuNum || 0 + ' 人',
+          id: 'stu'
         },
         {
           name: '沙漏',
-          number: '5' + ' 小时',
-          src: '../../static/images/沙漏.png'
+          src: '../../static/images/personalCenter/沙漏.png',
+          number: data.clockNum || 0 + ' 小时',
+          id: 'clock'
         }
       ]
+      //  this.$WX.setStorage('redflowerNum', data.redFlowerNum)
+      this.$apply()
     }
-    computed = {}
-
     onLoad () {
-      //  获取数据并绑定
-      //  this.menuList = ...
-      //  this.infoDatas = ...
+      if (this.$WX.getStorage('role') === 1) {
+        if (this.$WX.getStorage('token') === '') {
+          console.log('no token')
+        }
+        this.isStudent = true
+        this.$API('StudentCenter')
+          .then(data => {
+            this.treatAjaxDatasStudent(data.data)
+            this.$apply()
+          })
+      } else if (this.$WX.getStorage('role') === 2) {
+        this.isStudent = false
+        this.$API('TutorCenter')
+          .then(data => {
+            this.treatAjaxDatasTutor(data.data)
+          })
+      } else {
+        this.$WX.toast('获取身份失败')
+      }
+      //  this.$WX.downLoadImg()
     }
 
-    onShow () {}
-
+    onShow () {
+      if (this.$WX.getStorage('status') !== '') {
+        this.infoDatas.status = this.$WX.getStorage('status')
+      }
+    }
+    onReady () {}
+    onPageScroll () {
+      this.$UTIL.debounce(() => {
+        wx.stopPullDownRefresh()
+      }, 300)
+    }
     customData = {}
     methods = {}
     events = {
+      'show-click': this.$UTIL.debounce((key, event) => {
+        if (key === 'redFlower') {
+          this.$WX.jumpTo('./record')
+        }
+        if (key === 'stu') {
+          this.$WX.toast('前往捐赠学生页')
+        }
+        if (key === 'tutor') {
+          this.$WX.jumpTo('./donate')
+        }
+        if (key === 'clock') {
+          this.$WX.toast('前往沙漏页')
+        }
+        if (key === 'workedTime') {
+          this.$WX.toast('前往义工')
+        }
+      }, 200),
       'menu-click': this.$UTIL.debounce((key, event) => {
         if (key === 'record') {
-          console.log('前往花迹')
-          this.$WX.jumpTo('./login')
+          this.$WX.jumpTo('./record')
         }
         if (key === 'application') {
-          console.log('前往申请活动')
+          this.$WX.toast('前往申请活动')
         }
         if (key === 'message') {
-          console.log('前往消息通知')
+          this.$WX.toast('前往消息通知')
         }
         if (key === 'problem') {
-          console.log('前往问题反馈')
+          this.$WX.toast('前往问题反馈')
         }
       }, 200),
       'change-information': this.$UTIL.debounce((key, event) => {
         this.$WX.jumpTo('./info')
         if (key === 'student') {
-          console.log('前往学生个人信息修改页')
+          //  console.log('前往学生个人信息修改页')
           //  跳转到修改页
         }
         if (key === 'teather') {
-          console.log('前往导师个人信息修改页')
+          //  console.log('前往导师个人信息修改页')
           //  跳转到修改页
         }
       }, 200)

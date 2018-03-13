@@ -1,0 +1,144 @@
+<style lang="scss" type="text/scss">
+  .record-ul {
+    display: flex;
+    flex-flow: column nowrap;
+    &-item {
+      display: inline-flex;
+      span {
+        width: 350rpx;
+      }
+      span:nth-child(3){
+        width: 50rpx;
+      }
+    }
+  }
+</style>
+
+<template>
+  <view>剩余小红花: {{restFlower}}</view>
+  <ul class="record-ul">
+    <repeat for="{{infoList}}" item="item">
+    <li class="record-ul-item">
+      <span>{{item.time}}</span>{{item.name}}<span>赠送小红花{{item.amount}}朵</span><span>{{item.type}}</span>
+    </li>
+  </repeat>
+  </ul>
+</template>
+
+<script>
+  import page from '../base/basicPage.wpy'
+  
+  export default class record extends page {
+    config = {
+      navigationBarTitleText: '我的花迹'
+    }
+    components = {}
+    getDatas (data) {
+      data.forEach(item => {
+        let data = {
+          time: this.$UTIL.transformTime(itrm.createTime),
+          name: item.name,
+          amount: item.amount,
+          type: item.type
+        }
+        infoList.push(data)
+      })
+    }
+    data = {
+      restFlower: this.$WX.getStorage('redFlowerNum'),
+      page: 0,
+      totalPage: 0,
+      datas: [{
+        time: '2017',
+          name: 'genius',
+          amount: 19,
+          type: '+'
+      }],
+      infoList: [
+        {
+          time: '2017',
+          name: 'genius',
+          amount: 19,
+          type: '-'
+        }
+      ]
+    }
+    computed = {}
+
+    onLoad () {
+      /*
+      if (true) {
+        this.$API('GetStudentRecord',page)
+          .then(res => {
+            console.log(res)
+            this.totalPage = 10
+            this.getDatas(res.data)
+            this.page++
+          })
+        } else {
+          this.$API('GetTutorRecord',page)
+            .then(res => {
+              console.log(res)
+              //  this.totalPage = res.msg
+              this.getDatas(res.data)
+              this.page++
+            })
+        }
+        */
+    }
+    onReady () {
+       setTimeout(() => {
+          this.infoList = this.datas
+          this.$apply()
+        }, 2000)
+      /*
+      if (false) {
+        wx.startPullDownRefresh({
+          success (){
+            console.log(124)
+            if (this.page <= this.totalPage) {
+              this.$API('GetTutorRecord',page)
+                .then(data => {
+                  //  this.totalPage = data.msg
+                  this.getDatas(res.data)
+                  this.page++
+                  wx.stopPullDownRefresh()
+                })
+            }
+          },
+          fail () {
+            console.log('fuck')
+          },
+          complete () {
+            console.log('c')
+          }
+        })
+      } else {
+         wx.startPullDownRefresh({
+          success (){
+            if (this.page <= this.totalPage) {
+              this.$API('GetStudentRecord',page)
+                .then(data => {
+                  //  this.totalPage = data.msg
+                  this.getDatas(res.data)
+                  this.page++
+                })
+            }
+          },
+          fail () {
+            console.log('fuck')
+          },
+          complete () {
+            console.log('c')
+            wx.stopPullDownRefresh()
+          }
+          
+        })
+      }
+      */
+    }
+    methods = {}
+    events = {}
+    props = {}
+  }
+</script>

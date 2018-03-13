@@ -17,6 +17,13 @@ const debounce = (fn, boomTime) => {
 	}
 }
 
+const parseJwt = (token) => {
+	let base64Url = token.split('.')[1]
+	let base64 = base64Url.replace('-', '+').replace('_', '/')
+	console.log(Base64)
+	//	return JSON.parse(window.atob(base64))
+}
+
 /**
  * 验证是否为电话号码
  * @param {String|Number} phoneNumber - 电话号码
@@ -46,6 +53,29 @@ const isVerifyCode = (VerifyCode) => {
 	return reg.test(VerifyCode.toString())
 }
 
+const isStudentNumber = (StudentNumber) => {
+	if (StudentNumber.length > 20 || StudentNumber.length <= 3) {
+		return false
+	}
+	let reg = /\d{4,20}/
+	return reg.test(StudentNumber.toString())
+}
+
+const isIdentityCard = (IdentityCard) => {
+	if (IdentityCard.length !== 18) {
+		return false
+	}
+	let reg = /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/
+	return reg.test(IdentityCard.toString())
+}
+
+const isCardNumber = (CardNumber) => {
+	if (CardNumber.length < 16 || CardNumber.length > 19) {
+		return false
+	}
+	let reg = /\d{16,19}/
+	return reg.test(CardNumber.toString())
+}
 /**
  * 循环计数器
  * @param countTime 计数次数
@@ -71,6 +101,21 @@ const countFn = (countTime, basicMs, progressFn, callBackFn) => {
 	}
 }
 
+const transformTime = (data) => {
+	if (typeof data === 'undefined') {
+		return ''
+	}
+	const date = new Date(parseInt(data))
+	return date.getFullYear() + '-' + date.getMonth() + 1
+}
+// 将正常时间转换为UNIX时间戳
+const transformTimeToUnix = (data) => {
+	if (data === '') {
+		return ''
+	}
+	const dates = data.split('-')
+	return (Date.parse(new Date(dates[0], dates[1] - 1, 2)) / 1000)
+}
 /* TODO 需要写测试用例 */
 /**
  * 检验exampleObj的key是否都在ruleObj
@@ -97,6 +142,12 @@ export {
 	isPhoneNumber,
 	isInviteCode,
 	isVerifyCode,
+	isIdentityCard,
+	isCardNumber,
+	isStudentNumber,
 	countFn,
-	verifyParams
+	verifyParams,
+	parseJwt,
+	transformTime,
+	transformTimeToUnix
 }
