@@ -22,7 +22,7 @@ const ajax = ({url, method, data, headers}) => {
  * @param url {String} 跳转相对路径
  * @return {Promise}
  */
-const tabBarUrl = ['account/login', 'account/home', './home', './login']
+const tabBarUrl = ['./home', './account/home', './stuTrend', '../home']
 const jumpTo = (url) => {
 	//	console.log(url)
 	if (url === tabBarUrl[0] || url === tabBarUrl[1] || url === tabBarUrl[2] || url === tabBarUrl[3]) {
@@ -44,6 +44,10 @@ const redirectTo = (url) => {
 	return configFn(wx.redirectTo, {url})
 }
 
+const goBack = () => {
+	wx.navigateBack()
+}
+
 const toast = (title, icon = 'none', duration = 1500, hasMask = false) => {
 	return configFn(wx.showToast, {
 		title: title, // 提示的内容
@@ -53,11 +57,14 @@ const toast = (title, icon = 'none', duration = 1500, hasMask = false) => {
 	})
 }
 
-const modal = (content, fn) => {
-	return configFn(wx.showModal, {
-		title: '提示',
-		content: content, //	模态框内容
-		success: fn
+const modal = (content, title) => {
+	return new Promise((resolve, reject) => {
+		wx.showModal({
+			title: title,
+			content: content,
+			success: res => resolve(res),
+			fail: err => reject(err)
+		})
 	})
 }
 
@@ -108,68 +115,35 @@ const removeStorage = (key) => {
 	// return configFn(wx.removeStorage, {
 	// 	key
 	// })
-	return wx.removeStorage(key)
+	return wx.removeStorage({key})
 }
 
 const clearStorage = () => {
 	return wx.clearStorage()
 }
 
-// 从本地上传头像
-//	avatarUrl：当前页面存储在data里的头像属性名
-const chooseAvatar = (that, avatarUrl) => {
-	wx.chooseImage({
-		count: 1,
-		success: function (res) {
-			that[avatarUrl] = res.tempFilePaths[0]
-			let avatar = res.tempFilePaths[0]
-			that.$apply()
-			wx.request({
-				url: 'http://api.xiaoyaoeden.top/oss/up',
-				header: {Authorization: wx.getStorageSync('token')},
-				success (res) {
-					console.log(res.data)
-					let token = res.data.data
-					wx.uploadFile({
-						url: 'http://upload.qiniu.com',
-						filePath: avatar,
-						name: 'file',
-						formData: {
-							'key': 'avatar' + that.$WX.getStorage('userId') + '.jpg',
-							token: token
-						}
-					})
-				}
-			})
-		},
-		fail: function (res) {
-			toast('请重新选择图片', 'none')
-			that.$WX.toast('fuck')
-		}
+const chooseImg = (count) => {
+	return new Promise((resolve, reject) => {
+		wx.chooseImage({
+			count: count,
+			sizeType: ['compressed'],
+			success: (res) => resolve(res),
+			fail: (err) => reject(err)
+		})
 	})
 }
-
-const downLoadImg = () => {
-	let url
-	wx.request({
-		url: 'http://api.xiaoyaoeden.top/oss/down/eeee.jpg',
-		header: { Authorization: wx.getStorageSync('token') },
-		success (res) {
-			url = res.data.data
-			console.log(url)
-		}
+const UpLoadFile = (filePath, formData) => {
+	return new Promise((resolve, reject) => {
+		wx.uploadFile({
+			url: 'http://upload.qiniu.com',
+			filePath: filePath,	//	本地路径名
+			name: 'file',
+			formData: formData,
+			success: res => resolve(res),
+			fail: err => reject(err)
+		})
 	})
 }
-const upLoad = (url, filePath, name, header, formData, fn) => {
-	wx.uploadFile({
-		url: url,
-		filePath: filePath,
-		name: name,
-		formData: formData,
-		success: fn
-	})
-}
-
 const changeNavBarColor = (frontColor0x = '#ffffff', backgroundColor0x = '#db4d3d', animation = {
 	duration: 400, timingFunc: 'easeIn'
 }) => {
@@ -179,10 +153,18 @@ const changeNavBarColor = (frontColor0x = '#ffffff', backgroundColor0x = '#db4d3
 		animation
 	})
 }
-
+const getUserInfo = () => {
+	return new Promise((resolve, reject) => {
+		wx.getUserInfo({
+			success: res => resolve(res),
+			fail: err => reject(err)
+		})
+	})
+}
 export {
 	ajax, // 发送ajax请求
 	jumpTo, // page跳转
+	goBack, // 回到上一层page
 	redirectTo, // page重定向
 	reLaunch, // page重加载
 	toast, // 显示弹窗
@@ -198,8 +180,8 @@ export {
 	getStorage, // 获取缓存
 	removeStorage, // 删除某条缓存数据
 	clearStorage, // 清空缓存数据
-	chooseAvatar, //	上传头像
-	upLoad, //	上传文件
-	downLoadImg,	//	下载图片
-	changeNavBarColor // 改变顶部栏的颜色
+	changeNavBarColor, // 改变顶部栏的颜色
+	chooseImg,	//	选择图片
+	UpLoadFile,	//	上传文件
+	getUserInfo
 }

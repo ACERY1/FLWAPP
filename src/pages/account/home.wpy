@@ -10,20 +10,17 @@
     &-2 {
       height: 180rpx;
     }
-    &-3 {
-      margin-top: 20rpx;
-    }
   }
   .centerInfomation-Tag {
-    width: 24rpx;
-    height: 48rpx;
+    width: 48rpx;
+    height: 96rpx;
   }
 
 </style>
 
 <template>
   <view class="centerInfomation">
-    <Info class="centerInfomation-Module-1" :infoDatas.sync="infoDatas" :isStudent.sync="isStudent"></Info>
+    <Info class="centerInfomation-Module-1" :infoDatas.sync="infoDatas" :isStudent.sync="isStudent" :avatar.sync="avatar"></Info>
     <Show class="centerInfomation-Module-2" :showDatas.sync="showDatas" :isStudent.sync="isStudent"></Show>
     <Menu class="centerInfomation-Module-3" :menuList.sync="menuList" :isStudent.sync="isStudent"></Menu>
   </view>
@@ -37,7 +34,8 @@
 
   export default class Home extends page {
     config = {
-      navigationBarTitleText: '个人中心'
+      navigationBarTitleText: '个人中心',
+			enablePullDownRefresh: false
     }
     components = {
       Info: GeneralIntroduction,
@@ -49,45 +47,40 @@
         {
           unique: 'record',
           value: '我的花迹',
-          imgUrl: '../../static/images/personalCenter/我的花迹.png'
+          imgUrl: '../../static/images/personalCenter/trace.svg'
         },
         {
           unique: 'application',
           value: '申请活动',
-          imgUrl: '../../static/images/personalCenter/申请活动.png'
+          imgUrl: '../../static/images/personalCenter/apply.svg'
         },
         {
           unique: 'message',
           value: '消息通知',
-          imgUrl: '../../static/images/personalCenter/消息通知.png'
+          imgUrl: '../../static/images/personalCenter/message.svg'
         },
         {
           unique: 'problem',
           value: '在线客服',
-          imgUrl: '../../static/images/personalCenter/问题反馈.png'
+          imgUrl: '../../static/images/personalCenter/service.svg'
         }
       ],
-      infoDatas: {},
+      infoDatas: {
+				status: -1
+			},
       showDatas: [],
-      isStudent: false
+      isStudent: true,
+      avatar: ''
     }
     computed = {}
     treatAjaxDatasStudent (data) {
-      let status = 1
-      if (this.$WX.getStorage('status') === 0 && data.status === 1) {
-        status = 0
-        return
-      } else if (data.status === 2) {
-        this.$WX.setStorage('status', 2)
-        status = 2
-      }
       this.infoDatas = {
-        name: data.name || '',
-        avatar: data.avatar || '../../static/images/logo.png',
+        name: data.name || this.$WX.getStorage('wxName'),
         schoolId: data.schoolId || '0',
         profession: data.profession || '请填写',
-        status: status
+        status: data.status
       }
+			this.$apply()
       this.showDatas = [
         {
           name: '小红花',
@@ -108,31 +101,17 @@
           id: 'workedTime'
         }
       ]
-      //  this.$WX.setStorage('redFlowerNum', data.redFlowerNum)
+      this.$WX.setStorage('redFlowerNum', data.redFlowerNum)
       this.$apply()
     }
     treatAjaxDatasTutor (data) {
-      let status
-      if (this.$WX.getStorage('status') === 0 && data.status === 1) {
-        this.showDatas = data.showDatas
-        this.$WX.setStorage('redFlowerNum', data.redFlowerNum)
-        this.$apply()
-        status = 0
-        return
-      } else if (data.status === 2) {
-        this.$WX.setStorage('status', 2)
-        status = 2
-      } else {
-        status = 1
-      }
-      console.log(status)
       this.infoDatas = {
         name: data.name || '请填写',
-        avatar: data.avatar || '../../static/images/logo.png',
         isTutor: data.isTutor || 0,
         trade: data.trade || '请填写',
         company: data.company || '请填写',
-        position: data.position || '请填写'
+        position: data.position || '请填写',
+				status: data.status
       }
       this.showDatas = [
         {
@@ -154,38 +133,107 @@
           id: 'clock'
         }
       ]
-      //  this.$WX.setStorage('redflowerNum', data.redFlowerNum)
+      this.$WX.setStorage('redflowerNum', data.redFlowerNum)
       this.$apply()
     }
     onLoad () {
+			if (this.$WX.getStorage('hasAvatar') !== true) {
+				this.avatar = this.$WX.getStorage('wxAvatar')
+				this.$apply()
+			}
       if (this.$WX.getStorage('role') === 1) {
-        if (this.$WX.getStorage('token') === '') {
-          console.log('no token')
-        }
         this.isStudent = true
-        this.$API('StudentCenter')
-          .then(data => {
-            this.treatAjaxDatasStudent(data.data)
-            this.$apply()
+        this.$API('StudentCenter').then(data => {
+          this.treatAjaxDatasStudent(data.data)
+					this.$API('DownLoad', {avatar: this.$WX.getStorage('userId') + '-avatar.jpg'})
+						.then(res => {
+							this.avatar = res.data
+							this.$WX.setStorage('avatar', res.data)
+							this.$apply()
+						})
           })
       } else if (this.$WX.getStorage('role') === 2) {
         this.isStudent = false
+				this.menuList[1].value = '发表文章'
         this.$API('TutorCenter')
           .then(data => {
             this.treatAjaxDatasTutor(data.data)
+						this.$WX.setStorage('clockNum', data.data.clockNum)
           })
       } else {
-        this.$WX.toast('获取身份失败')
-      }
-      //  this.$WX.downLoadImg()
+				this.infoDatas = {
+					name: '香蕉君',
+					schoolId: '1',
+					profession: '香蕉舞',
+					status: -1
+				}
+				this.showDatas = [
+					{
+						name: '小红花',
+						src: '../../static/images/personalCenter/小红花.png',
+						number: 0 + ' 朵',
+						id: 'redFlower'
+					},
+					{
+						name: '导师',
+						src: '../../static/images/personalCenter/导师.png',
+						number: 0 + ' 人',
+						id: 'tutor'
+					},
+					{
+						name: '义工',
+						src: '../../static/images/personalCenter/义工.png',
+						number: 0 + ' 小时',
+						id: 'workedTime'
+					}
+				]
+				this.$apply()
+			}
     }
 
     onShow () {
-      if (this.$WX.getStorage('status') !== '') {
-        this.infoDatas.status = this.$WX.getStorage('status')
-      }
+			if (this.$WX.getStorage('hasAvatar') !== true) {
+				this.avatar = this.$WX.getStorage('wxAvatar')
+				this.$apply()
+			}
+			if (this.$WX.getStorage('role') === 0) {
+				this.$WX.modal('您尚未注册，是否前往注册？', '提示')
+					.then(res => {
+							if (res.confirm) {
+								this.$WX.toast('正前往注册页面')
+								this.$WX.jumpTo('./login')
+							} else if (res.cancel) {
+								this.$WX.toast('前往首页')
+								this.$WX.jumpTo('../home')
+							}
+						}
+					)
+			} else {
+				if (this.$WX.getStorage('hasChangeAvatar') === true) {
+					this.$API('DownLoad', {avatar: this.$WX.getStorage('userId') + '-avatar.jpg'})
+						.then(res => {
+							this.avatar = res.data
+							this.$WX.setStorage('avatar', res.data)
+							this.$WX.clearStorage('hasChangeAvatar')
+							this.$apply()
+						})
+				}
+				if (this.$WX.getStorage('role') === 1) {
+					this.isStudent = true
+					this.$API('StudentCenter')
+						.then(data => {
+							this.treatAjaxDatasStudent(data.data)
+					})
+				} else if (this.$WX.getStorage('role') === 2) {
+					this.isStudent = false
+					this.menuList[1].value = '发表文章'
+					this.$API('TutorCenter')
+						.then(data => {
+							this.treatAjaxDatasTutor(data.data)
+						})
+				}
+			}
     }
-    onReady () {}
     onPageScroll () {
       this.$UTIL.debounce(() => {
         wx.stopPullDownRefresh()
@@ -196,19 +244,19 @@
     events = {
       'show-click': this.$UTIL.debounce((key, event) => {
         if (key === 'redFlower') {
-          this.$WX.jumpTo('./record')
+          this.$WX.jumpTo('./redFlower')
         }
         if (key === 'stu') {
-          this.$WX.toast('前往捐赠学生页')
+					this.$WX.jumpTo('./donate')
         }
         if (key === 'tutor') {
           this.$WX.jumpTo('./donate')
         }
         if (key === 'clock') {
-          this.$WX.toast('前往沙漏页')
+					this.$WX.jumpTo('./time')
         }
         if (key === 'workedTime') {
-          this.$WX.toast('前往义工')
+					this.$WX.jumpTo('./time')
         }
       }, 200),
       'menu-click': this.$UTIL.debounce((key, event) => {
@@ -216,7 +264,11 @@
           this.$WX.jumpTo('./record')
         }
         if (key === 'application') {
-          this.$WX.toast('前往申请活动')
+          if (this.isStudent) {
+						this.$WX.jumpTo('./activity')
+					} else {
+						this.$WX.jumpTo('../writeArticle')
+					}
         }
         if (key === 'message') {
           this.$WX.toast('前往消息通知')
@@ -227,14 +279,6 @@
       }, 200),
       'change-information': this.$UTIL.debounce((key, event) => {
         this.$WX.jumpTo('./info')
-        if (key === 'student') {
-          //  console.log('前往学生个人信息修改页')
-          //  跳转到修改页
-        }
-        if (key === 'teather') {
-          //  console.log('前往导师个人信息修改页')
-          //  跳转到修改页
-        }
       }, 200)
     }
   }

@@ -1,10 +1,14 @@
 <style lang="scss" type="text/scss">
 	@import "../../common/styles/mixins";
 	@import "../../common/styles/variables";
+	@import "../../common/styles/common";
 
 	.personPage{
-
+		.shadow{
+			box-shadow: 0rpx 6rpx 50rpx lighten($red,20%);
+		}
 	}
+
 
 	.card{
 		&-container{
@@ -19,35 +23,196 @@
 			margin-top: -170rpx;
 		}
 	}
+
+	.donate-btn{
+		position: fixed;
+		bottom: 20rpx;
+		left: 0;
+		z-index: 2;
+		width: 100%;
+	}
+	.musk {
+		position: fixed;
+		z-index: 1;
+		bottom: 0;
+		width: 100%;
+		height: 160rpx;
+		background: linear-gradient(to top, $borderClr, transparent);
+	}
 </style>
 
 <template>
+	<view class="personPage">
 		<view class="card-base"></view>
-		<view class="card-container">
-			<usrCard class="card-main"></usrCard>
+
+		<view class="card-container" wx:if="{{role == 1}}">
+			<usrCard class="card-main" :role.sync="role" :stuInfo.sync="userInfo"></usrCard>
 		</view>
 
+		<view class="card-container" wx:if="{{role == 2}}">
+			<usrCard class="card-main" :role.sync="role" :tutorInfo.sync="userInfo"></usrCard>
+		</view>
+
+		<view>
+			<p class="title-bar">个人简历</p>
+			<view class="mt30 pl20 pr20 t3-c1__light">{{userInfo.personalIntro}}</view>
+		</view>
+
+		<view wx:if="{{role == 1}}">
+			<p class="title-bar">问题</p>
+			<view class="mt30 pl20 pr20 t3-c1__light"></view>
+		</view>
+
+		<!--<view wx:if="{{role == 2}}" class="donate-btn l-box__allMid">-->
+		<view wx:if="{{role == 1}}" class="donate-btn l-box__allMid">
+			<!--<donateBtn title="赠送小红花" width="300" height="88" color="red" key="donate" font="32" radius="60" class="shadow"></donateBtn>-->
+			<donateBtn title="赠送小红花" width="300" height="88" color="red" key="pp-donate" font="32" radius="60"></donateBtn>
+		</view>
+
+		<!--<view class="musk"></view>-->
+		<view wx:if="{{isShowDialog}}">
+			<dialog :aceptFlwNumber.sync="aceptFlwNumber" :leftFlwNumber.sync="leftFlwNumber" :stuName.sync="userInfo"></dialog>
+		</view>
+
+		<view wx:if="{{isShowConfirmDialog}}">
+			<conDialog :title.sync="confirmDialogTitle" key="donate"></conDialog>
+		</view>
+
+		<view wx:if="{{isShowDonateSuccess}}">
+			<successDialog title="赠送成功" key="sd-success"></successDialog>
+		</view>
+
+	</view>
 </template>
 
 <script>
 	import page from '../base/basicPage.wpy'
 	import userCard from '../../components/Cards/userCard'
+	import BasicButton from '../../components/Buttons/BasicButton'
+	import donateDialog from '../../components/Dialogs/donateDialog'
+	import confirmDialog from '../../components/Dialogs/confirmDialog'
+	import noticeDialog from '../../components/Dialogs/noticeDialog'
 
 	export default class PersonalPage extends page {
-		config = {}
-		components = {
-			usrCard: userCard
+		config = {
+			enablePullDownRefresh: false
 		}
-		data = {}
+		components = {
+			usrCard: userCard,
+			donateBtn: BasicButton,
+			dialog: donateDialog,
+			conDialog: confirmDialog,
+			successDialog: noticeDialog
+		}
+		data = {
+			role: 1,
+			userInfo: {
+				'name': '红花君',
+				'avatar': '../../static/images/logo.png',
+				'sex': 1,
+				'schoolId': 1,
+				'profession': '软件工程',
+				'direction': 1,
+				'simpleIntro': '这个人很懒，没有填写个人介绍',
+				'personalIntro': '这个人很懒，没有填写个人简历',
+				'answer': 'default',
+				'userId': 1,
+				'age': 0,
+				'grade': 'default',
+				'redFlowerNum': 0,
+				'tutorNum': 0,
+				'articleNum': 0,
+				'isTutor': 1,
+				'trade': 'default',
+				'company': 'default',
+				'position': 'default',
+				'stuNum': 1
+			},
+			isShowDialog: false, // 是否显示捐赠弹框
+			isShowConfirmDialog: false,
+			isShowDonateSuccess: false,
+			confirmDialogTitle: '',
+			aceptFlwNumber: 4,
+			leftFlwNumber: 8,
+			donateNumber: 0
+		}
 		computed = {}
 
-		onLoad () {}
+		_updateInfo (data) {
+			for (let key of Object.keys(data)) {
+				this.userInfo[key] = data[key]
+			}
+			this.$apply()
+		}
+		_showSuccess () {
+			this.isShowDonateSuccess = true
+			setTimeout(() => {
+				this.isShowDonateSuccess = false
+				this.$apply()
+			}, 2000)
+		}
 
-		onShow () {}
+		onLoad () {
+			let visitUserId = this.$WX.getStorage('visit_userId') || 1 // 欲访问的用户id
+			this.role = this.$WX.getStorage('visit_role') || 1
+			if (!visitUserId) {
+				this.$WX.toast('访问错误，回到首页')
+//				setTimeout(() => { this.$WX.goBack() }, 1500)
+				return false
+			}
+			/* 测试case stu 11 tutor 13 */
+			if (this.role === 1) {
+				this.$API('GetStuHomePage', { userId: visitUserId }).then(res => {
+					this._updateInfo(res.data)
+				})
+//					.catch(() => (setTimeout(() => { this.$WX.goBack() }, 1500)))
+			}
+			if (this.role === 2) {
+				this.$API('GetMentorHomePage', { userId: visitUserId }).then(res => {
+					this._updateInfo(res.data)
+				})
+//					.catch(() => (setTimeout(() => { this.$WX.goBack() }, 1500)))
+			}
+		}
+		onShow () {
+		}
+
+		onReady () {
+			this.$WX.removeStorage('visit_userId') // 删除欲访问的用户id
+			this.$WX.removeStorage('visit_role') // 删除欲访问的用户role
+		}
 
 		customFunction () {}
 
 		methods = {}
-		events = {}
+		events = {
+			'btn-click': (key) => {
+				if (key === 'pp-donate') {
+					this.isShowDialog = true
+				}
+			},
+			'close': () => {
+				this.isShowDialog = false
+			},
+			'dialog-cancle': () => {
+				this.isShowConfirmDialog = false
+				this.donateNumber = 0
+			},
+			'dialog-confirm': () => {
+				/* TODO 调用捐赠接口 */
+				this.isShowConfirmDialog = false
+				this.userInfo.redFlowerNum += this.donateNumber
+				this._showSuccess()
+			},
+			'showDonateConfirmDialog': (number) => {
+				if (number === 0) {
+					this.isShowConfirmDialog = false
+					return false
+				}
+				this.donateNumber = number
+				this.isShowConfirmDialog = true
+				this.confirmDialogTitle = `给${this.userInfo.name}赠送小红花${number}朵？`
+			}
+		}
 	}
 </script>

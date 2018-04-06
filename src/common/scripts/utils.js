@@ -1,3 +1,6 @@
+import { setStorage } from './wxUtil';
+import { b64utoutf8 } from 'jsrsasign';
+
 /* 工具函数 */
 /**
  * 函数防抖
@@ -17,11 +20,14 @@ const debounce = (fn, boomTime) => {
 	}
 }
 
-const parseJwt = (token) => {
-	let base64Url = token.split('.')[1]
-	let base64 = base64Url.replace('-', '+').replace('_', '/')
-	console.log(Base64)
-	//	return JSON.parse(window.atob(base64))
+const throttle = (func, limit) => {
+	let lastRan = Date.now()
+	return function () {
+		if (Date.now() - lastRan >= limit) {
+			func.apply(this, arguments)
+			lastRan = Date.now()
+		}
+	}
 }
 
 /**
@@ -101,11 +107,14 @@ const countFn = (countTime, basicMs, progressFn, callBackFn) => {
 	}
 }
 
-const transformTime = (data) => {
+const transformTime = (data, option) => {
 	if (typeof data === 'undefined') {
 		return ''
 	}
-	const date = new Date(parseInt(data))
+	const date = new Date(parseInt(data) * 1000)
+	if (option && option === 'year_month_day') {
+		return date.getFullYear() + '-' + date.getMonth() + 1 + '-' + (date.getDate() > 9 ? date.getDate() : '0' + date.getDate())
+	}
 	return date.getFullYear() + '-' + date.getMonth() + 1
 }
 // 将正常时间转换为UNIX时间戳
@@ -137,8 +146,41 @@ const verifyParams = (ruleObj, exampleObj) => {
 	return false
 }
 
+// 解析token,获取userID， role， openID, exp
+const parseToken = (token) => {
+	// 小程序不支持atob，所有引入了jsrsasign库的 b64utoutf8
+	// let info = JSON.parse(atob(token.split('.')[1]))
+	let info = JSON.parse(b64utoutf8(token.split('.')[1]))
+	setStorage('exp', info.exp * 1000)
+	setStorage('role', info.role)
+	setStorage('userId', info.userid)
+	setStorage('openId', info.openid)
+	//	setStorage('token', info.exp)
+}
+
+// 	source: 需要筛选的原资源
+//	itemName: 要筛选的属性名
+//	itemValue: 指定的属性值
+const filtrateItem = (source, itemName, itemValue) => {
+	return source.filter((item) => {
+		return item[itemName] === itemValue
+	})
+}
+
+// 	source: 需要筛选的原资源
+//	关键字: {name: value}
+const filtrate = (source, keyWord) => {
+	const keyWordName = Object.keys(keyWord)
+	const keyWordValue = Object.values(keyWord)
+	keyWordName.map((item, index) => {
+		source = filtrateItem(source, item, keyWordValue[index])
+	})
+	return source
+}
+
 export {
 	debounce,
+	throttle,
 	isPhoneNumber,
 	isInviteCode,
 	isVerifyCode,
@@ -147,7 +189,8 @@ export {
 	isStudentNumber,
 	countFn,
 	verifyParams,
-	parseJwt,
 	transformTime,
-	transformTimeToUnix
+	transformTimeToUnix,
+	parseToken,
+	filtrate
 }

@@ -7,6 +7,7 @@
      border-color: #f4f4f4;
      border-width: 1rpx;
      height: 190rpx;
+		 width: 750rpx;
      display: inline-flex;
      align-items: center;
      image:nth-child(1) {
@@ -15,11 +16,10 @@
        width: 128rpx;
        height: 128rpx;
        border-radius: 50%;
-       background-color: aqua;
      }
      .avatar {
-       width: 20rpx;
-       height: 40rpx;
+       width: 40rpx;
+       height: 80rpx;
        position: absolute;
        right: 30rpx;
      }
@@ -43,68 +43,106 @@
 </style>
 
 <template>
-  <ul wx:if="{{isTutor}}" class="donate-ul">
-    <repeat for="{{TutorList}}" item="item">
-      <li>
-        <image src="{{item.avatar}}" />
-        <div>
-          <span class="name">{{item.name}}</span>
-          <span class="other">{{item.company}}</span>
-          <span class="info">捐赠小红花{{item.number}}朵</span>
-        </div>
-        <image src="../../static/images/personalCenter/u125.png" class="avatar" id="{{item.userId}}" @tap="getMoreInfo"/>
-      </li>
-    </repeat>
-  </ul>
+		<scroll-view style="height: 101vh" class="donate-ul" scroll-y="true">
+			<repeat for="{{InfoList}}" item="item">
+				<li id="{{item.userId}}" @tap="jumpToUserPage">
+					<image src="{{item.avatar}}" />
+					<div>
+						<span class="name">{{item.name}}</span>
+						<span class="other">{{item.company}}</span>
+						<span class="info">捐赠小红花{{item.sum}}朵</span>
+					</div>
+				</li>
+			</repeat>
+		</scroll-view>
 </template>
 
 <script>
   import page from '../base/basicPage.wpy'
   export default class Donate extends page {
-    config = {
-      navigationBarTitleText: this.isTutor?'我的导师':'我的学生'
-    }
+    config = {}
     component = {}
     data = {
-      isTutor: true,
-      TutorList: [
-        {
-          name: 'Van',
-          company: 'GayHub',
-          position: 'CEO',
-          avatar: '../../static/images/logo.png',
-          number: 19,
-          userId: 1
-        },
-        {
-          name: '比利',
-          company: 'GayHub',
-          position: 'CTO',
-          avatar: '../../static/images/logo.png',
-          number: 18,
-          userId: 2
-        }
-      ]
+      InfoList: [],
+			page: 0
     }
     computed = {}
-
-    onLoad () {
-      /*
-      if (this.$WX.getStorage('role') === 2) {
-        this.isTutor = true
-      } else {
-        this.isTutor = false
-      }
-      */
+    getDatas (data) {
+      data.forEach(item => {
+        this.InfoList.push({
+          name: item.name,
+          company: item.company,
+          sum: item.sum
+        })
+      })
     }
-    onShow () {}
+    LoadDatas (role, count = 2) {
+			this.$API(role, {page: this.page})
+				.then(res => {
+					this.page++
+					let imageArray = []
+					const InfoListLength = this.InfoList.length
+					this.getDatas(res.data)
+					res.data.forEach(item => {
+						imageArray.push(String(item.userId))
+					})
+					imageArray = imageArray.map(item => item + '-avatar.jpg')
+					this.$API('PostUserImagesName', imageArray)
+						.then(res => {
+							this.InfoList.forEach((item, index) => {
+								if (count === 1) {
+									item.avatar = res.data[index]
+									this.$apply()
+								} else {
+									if (index >= InfoListLength) {
+										item.avatar = res.data[index - InfoListLength]
+										this.$apply()
+									}
+								}
+							})
+						})
+				})
+		}
+    onLoad () {
+      if (this.$WX.getStorage('role') === 2) {
+				this.LoadDatas('GetTutorStudents', 1)
+      } else {
+				this.LoadDatas('GetStudentTutors', 1)
+      }
+    }
+    onPullDownRefresh () {
+			this.InfoList = []
+			this.page = 0
+			if (this.$WX.getStorage('role') === 2) {
+				this.LoadDatas('GetTutorStudents', 1)
+			} else {
+				this.LoadDatas('GetStudentTutors', 1)
+			}
+			setTimeout(() => {
+				wx.stopPullDownRefresh()
+			}, 1000)
+		}
+    onReachBottom () {
+			if (this.$WX.getStorage('role') === 2) {
+				this.LoadDatas('GetTutorStudents')
+			} else {
+				this.LoadDatas('GetStudentTutors')
+			}
+		}
 
     methods = {
-      getMoreInfo (event) {
-        this.$WX.toast(event.target.id)
-      }
+			jumpToUserPage (event) {
+        if (this.$WX.getStorage('role') === 2) {
+          this.$WX.setStorage('visit_userId', parseInt(event.target.id))
+          this.$WX.setStorage('visit_role', 1)
+          this.$WX.jumpTo('./user/personalPage')
+        }
+        if (this.$WX.getStorage('role') === 1) {
+          this.$WX.setStorage('visit_userId', parseInt(event.target.id))
+          this.$WX.setStorage('visit_role', 2)
+          this.$WX.jumpTo('./user/personalPage')
+        }
+			}
     }
-    events = {}
-    propos = {}
   }
 </script>

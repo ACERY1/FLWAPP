@@ -1,4 +1,5 @@
 import ajax from './ajax'
+import request from './request'
 import API from './APIList'
 import { verifyParams } from '../common/scripts/utils' // 检测data里的key是否完整
 
@@ -12,5 +13,3 @@ export default (apiKey, data, headers) => {
 	}
 	return ajax(api.url, api.method, data, headers)
 }
-
-// this.$API('UserLogin',{}，{}).then(data=>{console.log(data)})

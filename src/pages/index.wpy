@@ -23,7 +23,6 @@
 </style>
 
 <template>
-	<child></child>
 	<view class="container">
 		<image src="{{logoURL}}" class="icon"></image>
 	</view>
@@ -33,8 +32,6 @@
 
 <script>
 	import page from './base/basicPage.wpy'
-//	import { UserLogin, test } from '../API/index'
-//	import { jumpTo } from '../common/scripts/wxUtil'
 
 	export default class Index extends page {
 		config = {
@@ -44,21 +41,25 @@
 		components = {}
 
 		onLoad () {
-			const that = this
-			this.$WX.setStorage('role', 1)
-			this.$WX.wxLogin().then((res) => {
-				wx.getUserInfo({
-					success: function() {
-						that.$WX.jumpTo('account/home')
-					}
-				})
-			})
+			let debug = false
+			if (debug) {
+				//			this.$WX.jumpTo('./home')
+//			this.$WX.jumpTo('./account/login')
+				this.$WX.jumpTo('./user/personalPage')
+			}
+
+			this.$WX.wxLogin()
+				.then(
+					this.$WX.getUserInfo()
+						.then(res => {
+							this.$WX.setStorage('wxAvatar', res.userInfo.avatarUrl)
+							this.$WX.setStorage('wxName', res.userInfo.nickName)
+							this.$WX.jumpTo('./home')
+						})
+				)
 		}
 
-		onReady () {
-		//	
-//			this.$WX.jumpTo('user/personalPage')
-		}
+		onReady () {}
 		data = {
 			logoURL: '../static/images/logo.png'
 		}
