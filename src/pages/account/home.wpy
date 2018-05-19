@@ -1,7 +1,9 @@
 <style lang="scss" type="text/scss">
   .centerInfomation {
-    margin-top: 20rpx;
+    padding-top: 20rpx;
     border-bottom: 400rpx solid #f4f4f4;
+    // box-sizing: border-box;
+    // position: fixed;
   }
   .centerInfomation-Module {
     &-1 {
@@ -20,7 +22,7 @@
 
 <template>
   <view class="centerInfomation">
-    <Info class="centerInfomation-Module-1" :infoDatas.sync="infoDatas" :isStudent.sync="isStudent" :avatar.sync="avatar"></Info>
+    <Info class="centerInfomation-Module-1" :infoDatas.sync="infoDatas" :isStudent.sync="isStudent" :avatar.sync="avatar" ></Info>
     <Show class="centerInfomation-Module-2" :showDatas.sync="showDatas" :isStudent.sync="isStudent"></Show>
     <Menu class="centerInfomation-Module-3" :menuList.sync="menuList" :isStudent.sync="isStudent"></Menu>
   </view>
@@ -50,53 +52,54 @@
           imgUrl: '../../static/images/personalCenter/trace.svg'
         },
         {
-          unique: 'application',
-          value: '申请活动',
-          imgUrl: '../../static/images/personalCenter/apply.svg'
-        },
+					unique: 'article',
+					value: '发表文章',
+					imgUrl: '../../static/images/personalCenter/brush.svg'
+				},
         {
-          unique: 'message',
-          value: '消息通知',
-          imgUrl: '../../static/images/personalCenter/message.svg'
+          unique: 'articleList',
+          value: '我的文章',
+          imgUrl: '../../static/images/personalCenter/articleList.svg'
         },
-        {
-          unique: 'problem',
-          value: '在线客服',
-          imgUrl: '../../static/images/personalCenter/service.svg'
-        }
+				{
+					unique: 'application',
+					value: '基金会服务',
+					imgUrl: '../../static/images/personalCenter/apply.svg'
+				}
       ],
       infoDatas: {
 				status: -1
 			},
       showDatas: [],
-      isStudent: true,
+      schoolList: [],
+      isStudent: false,
+      isFirstShow: true,
       avatar: ''
     }
     computed = {}
     treatAjaxDatasStudent (data) {
       this.infoDatas = {
         name: data.name || this.$WX.getStorage('wxName'),
-        schoolId: data.schoolId || '0',
+        school: (data.schoolId !== -1 && (this.schoolList.filter((item, index) => item.id === data.schoolId))[0].schoolName) || '请填写',
         profession: data.profession || '请填写',
         status: data.status
       }
-			this.$apply()
       this.showDatas = [
         {
           name: '小红花',
-          src: '../../static/images/personalCenter/小红花.png',
+          src: '../../static/images/personalCenter/redFlower.png',
           number: data.redFlowerNum || 0 + ' 朵',
           id: 'redFlower'
         },
         {
           name: '导师',
-          src: '../../static/images/personalCenter/导师.png',
+          src: '../../static/images/personalCenter/tutor.png',
           number: data.tutorNum || 0 + ' 人',
           id: 'tutor'
         },
         {
           name: '义工',
-          src: '../../static/images/personalCenter/义工.png',
+          src: '../../static/images/personalCenter/workedTime.png',
           number: data.workedTime || 0 + ' 小时',
           id: 'workedTime'
         }
@@ -107,7 +110,7 @@
     treatAjaxDatasTutor (data) {
       this.infoDatas = {
         name: data.name || '请填写',
-        isTutor: data.isTutor || 0,
+        isTutor: data.isTutor,
         trade: data.trade || '请填写',
         company: data.company || '请填写',
         position: data.position || '请填写',
@@ -116,123 +119,122 @@
       this.showDatas = [
         {
           name: '小红花',
-          src: '../../static/images/personalCenter/小红花.png',
+          src: '../../static/images/personalCenter/redFlower.png',
           number: data.redFlowerNum || 0 + ' 朵',
           id: 'redFlower'
         },
         {
           name: '捐赠学生',
-          src: '../../static/images/personalCenter/捐赠学生.png',
+          src: '../../static/images/personalCenter/student.png',
           number: data.stuNum || 0 + ' 人',
           id: 'stu'
         },
         {
           name: '沙漏',
-          src: '../../static/images/personalCenter/沙漏.png',
+          src: '../../static/images/personalCenter/clock.png',
           number: data.clockNum || 0 + ' 小时',
           id: 'clock'
         }
       ]
-      this.$WX.setStorage('redflowerNum', data.redFlowerNum)
+      this.$WX.setStorage('redFlowerNum', data.redFlowerNum)
       this.$apply()
     }
     onLoad () {
-			if (this.$WX.getStorage('hasAvatar') !== true) {
-				this.avatar = this.$WX.getStorage('wxAvatar')
-				this.$apply()
-			}
       if (this.$WX.getStorage('role') === 1) {
         this.isStudent = true
-        this.$API('StudentCenter').then(data => {
-          this.treatAjaxDatasStudent(data.data)
-					this.$API('DownLoad', {avatar: this.$WX.getStorage('userId') + '-avatar.jpg'})
-						.then(res => {
+        this.$API('GetSchoolList')
+          .then(res => {
+            this.schoolList = res.data
+            return this.$API('StudentCenter')
+          })
+          .then(data => {
+            this.treatAjaxDatasStudent(data.data)
+            return this.$API('DownLoad', {avatar: this.$WX.getStorage('userId') + '-avatar.jpg'})
+          })
+          .then(res => {
 							this.avatar = res.data
 							this.$WX.setStorage('avatar', res.data)
 							this.$apply()
-						})
-          })
+					})
       } else if (this.$WX.getStorage('role') === 2) {
         this.isStudent = false
 				this.menuList[1].value = '发表文章'
         this.$API('TutorCenter')
           .then(data => {
             this.treatAjaxDatasTutor(data.data)
-						this.$WX.setStorage('clockNum', data.data.clockNum)
+            this.$WX.setStorage('clockNum', data.data.clockNum)
+            return this.$API('DownLoad', {avatar: this.$WX.getStorage('userId') + '-avatar.jpg'})
           })
+          .then(res => {
+							this.avatar = res.data
+							this.$WX.setStorage('avatar', res.data)
+							this.$apply()
+					})
       } else {
+        this.avatar = '../../static/images/logo.png'
 				this.infoDatas = {
-					name: '香蕉君',
-					schoolId: '1',
-					profession: '香蕉舞',
-					status: -1
-				}
+					name: '红花君',
+					company: '深圳海鲸教育基金',
+					position: 'CEO',
+          status: -1
+        }
+        this.menuList[1].value = '发表文章'
 				this.showDatas = [
 					{
-						name: '小红花',
-						src: '../../static/images/personalCenter/小红花.png',
-						number: 0 + ' 朵',
-						id: 'redFlower'
-					},
-					{
-						name: '导师',
-						src: '../../static/images/personalCenter/导师.png',
-						number: 0 + ' 人',
-						id: 'tutor'
-					},
-					{
-						name: '义工',
-						src: '../../static/images/personalCenter/义工.png',
-						number: 0 + ' 小时',
-						id: 'workedTime'
-					}
+            name: '小红花',
+            src: '../../static/images/personalCenter/redFlower.png',
+            number: 0 + ' 朵',
+            id: 'redFlower'
+          },
+          {
+            name: '捐赠学生',
+            src: '../../static/images/personalCenter/student.png',
+            number: 0 + ' 人',
+            id: 'stu'
+          },
+          {
+            name: '沙漏',
+            src: '../../static/images/personalCenter/clock.png',
+            number: 0 + ' 小时',
+            id: 'clock'
+          }
 				]
 				this.$apply()
 			}
     }
 
     onShow () {
-			if (this.$WX.getStorage('hasAvatar') !== true) {
-				this.avatar = this.$WX.getStorage('wxAvatar')
-				this.$apply()
-			}
-			if (this.$WX.getStorage('role') === 0) {
-				this.$WX.modal('您尚未注册，是否前往注册？', '提示')
-					.then(res => {
-							if (res.confirm) {
-								this.$WX.toast('正前往注册页面')
-								this.$WX.jumpTo('./login')
-							} else if (res.cancel) {
-								this.$WX.toast('前往首页')
-								this.$WX.jumpTo('../home')
-							}
-						}
-					)
-			} else {
-				if (this.$WX.getStorage('hasChangeAvatar') === true) {
-					this.$API('DownLoad', {avatar: this.$WX.getStorage('userId') + '-avatar.jpg'})
-						.then(res => {
-							this.avatar = res.data
-							this.$WX.setStorage('avatar', res.data)
-							this.$WX.clearStorage('hasChangeAvatar')
-							this.$apply()
-						})
-				}
-				if (this.$WX.getStorage('role') === 1) {
-					this.isStudent = true
-					this.$API('StudentCenter')
-						.then(data => {
-							this.treatAjaxDatasStudent(data.data)
+      if (this.isFirstShow) {
+        this.isFirstShow = false
+      } else {
+        if (this.$WX.getStorage('hasChangeAvatar') === true) {
+          this.$WX.setStorage('hasChangeAvatar', false)
+          this.$API('DownLoad', {avatar: this.$WX.getStorage('userId') + '-avatar.jpg'})
+            .then(res => {
+              this.avatar = res.data
+              this.$WX.setStorage('avatar', res.data)
+              this.$apply()
 					})
-				} else if (this.$WX.getStorage('role') === 2) {
-					this.isStudent = false
-					this.menuList[1].value = '发表文章'
-					this.$API('TutorCenter')
-						.then(data => {
-							this.treatAjaxDatasTutor(data.data)
-						})
-				}
-			}
+        }
+        if (this.$WX.getStorage('role') === 1) {
+          this.isStudent = true
+          this.$API('GetSchoolList')
+            .then(res => {
+              this.schoolList = res.data
+              return this.$API('StudentCenter')
+            })
+            .then(data => {
+              this.treatAjaxDatasStudent(data.data)
+            })
+        } else if (this.$WX.getStorage('role') === 2) {
+          this.isStudent = false
+          this.menuList[1].value = '发表文章'
+          this.$API('TutorCenter')
+            .then(data => {
+              this.treatAjaxDatasTutor(data.data)
+          })
+        }
+      }
     }
     onPageScroll () {
       this.$UTIL.debounce(() => {
@@ -250,13 +252,13 @@
 					this.$WX.jumpTo('./donate')
         }
         if (key === 'tutor') {
-          this.$WX.jumpTo('./donate')
+          this.$WX.jumpTo('./tutor')
         }
         if (key === 'clock') {
 					this.$WX.jumpTo('./time')
         }
         if (key === 'workedTime') {
-					this.$WX.jumpTo('./time')
+					this.$WX.jumpTo('./workedTime')
         }
       }, 200),
       'menu-click': this.$UTIL.debounce((key, event) => {
@@ -264,21 +266,35 @@
           this.$WX.jumpTo('./record')
         }
         if (key === 'application') {
-          if (this.isStudent) {
+          if (this.$WX.getStorage('role') === 0) {
+            this.$WX.interceptTourist()
+          } else {
 						this.$WX.jumpTo('./activity')
+          }
+        }
+        if (key === 'article') {
+					if (this.$WX.getStorage('role') === 0) {
+						this.$WX.interceptTourist()
 					} else {
 						this.$WX.jumpTo('../writeArticle')
 					}
-        }
-        if (key === 'message') {
-          this.$WX.toast('前往消息通知')
-        }
-        if (key === 'problem') {
-          this.$WX.toast('前往问题反馈')
-        }
+				}
+        if (key === 'articleList') {
+					if (this.$WX.getStorage('role') === 0) {
+						this.$WX.interceptTourist()
+					} else {
+            this.$WX.setStorage('visit_userId', this.$WX.getStorage('userId'))
+            this.$WX.setStorage('visit_role', this.$WX.getStorage('role'))
+						this.$WX.jumpTo('../user/articleList')
+					}
+				}
       }, 200),
       'change-information': this.$UTIL.debounce((key, event) => {
-        this.$WX.jumpTo('./info')
+        if (this.$WX.getStorage('role') === 0) {
+					this.$WX.interceptTourist()
+				} else {
+					this.$WX.jumpTo('./info')
+				}
       }, 200)
     }
   }

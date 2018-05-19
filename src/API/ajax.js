@@ -23,13 +23,14 @@ function methodErr () {
 function _normalRequest (config = {}) {
 	return new Promise((resolve, reject) => {
 		config.fail = err => {
-			hideLoading()
+			// hideLoading()
 			toast(`请求失败 ${err.errMsg}`, 'none', 1500)
 			reject(err)
 		}
 		config.success = res => {
 			if (res.statusCode !== 200) {
 				statusCodeFilter(res.statusCode)
+				reject(res.statusCode)
 			}
 			if (res.header['Authorization']) {
 				/* 如果header里有token，则更新 */
@@ -37,13 +38,13 @@ function _normalRequest (config = {}) {
 				parseToken(res.header['Authorization'])
 			}
 			if (res.data.code) {
-				toast(res.data.msg)
+				toast(`错误：${res.data.msg}`)
 				reject(res.data)
 			}
 			/* TODO: TEST放出header里面的token为了做测试 */
 			// res.data.token = res.header['Authorization']
 			/* 在这里进行的返回的，那么在此之前完成重请求就可以 */
-			hideLoading() // 请求成功后释放
+			// hideLoading() // 请求成功后释放
 			resolve(res.data)
 		}
 		wx.request(config)
@@ -114,8 +115,8 @@ function _configHeader (headers) {
 export default (rurl = argumentsErr(), method = argumentsErr(), data = null, headers = {'Content-Type': 'application/json'}) => {
 	if (!DEBUG) {
 		/* loading */
-		hideLoading()
-		showLoading('加载中...')
+		// hideLoading()
+		// showLoading('加载中')
 		let _method = method.toUpperCase()
 		let _url = HOST_URL + rurl
 		if (SUPPORT_METHODS.indexOf(_method) === -1) {

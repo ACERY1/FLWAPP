@@ -85,11 +85,15 @@
 			<view class="scholarship-info-value">{{info.bankNumber}}</view>
 		</view>
 		<view class="scholarship-info">
+			<view class="scholarship-info-name">开户行：</view>
+			<view class="scholarship-info-value">{{info.bankBranch}}</view>
+		</view>
+		<view class="scholarship-info">
 			<view class="scholarship-info-name">申请数额：</view>
 			<view class="scholarship-info-value"><input type="number" placeholder="输入要提现的小红花数量" bindinput="onInput"/></view>
 		</view>
 		<view class="scholarship-message" style="text-align: center; padding-left: 50rpx;padding-right: 50rpx;padding-top: 20rpx;">
-			当前您还有{{redFlowerAmount}}朵小红花，最低提现10朵小红花，最高提现100朵小红花。
+			当前您还有{{redFlowerAmount}}朵小红花，最低提现5朵小红花，最高提现100朵小红花。
 		</view>
 		<view class="activity-button">
 			<button @tap="onSubmit"><span>申请</span></button>
@@ -111,11 +115,11 @@
 			Picker: Picker
 		}
 		data = {
-			redFlowerAmount: 10,
+			redFlowerAmount: 5,
 			avatar: '',
 			info: {},
 			schoolList: [],
-			amount: 10
+			amount: 5
 		}
 		getAjaxInfo (data) {
 			this.info = {
@@ -123,17 +127,21 @@
 				phone: data.phone,
 				idNumber: data.idNum,
 				bankNumber: data.bankNumber,
-				school: this.schoolList[data.schoolId]
+				bankBranch: data.bankBranch,
+				school: ''
 			}
+			this.schoolList.find((item) => {
+				if (item.id === data.schoolId) {
+					this.info.school = item.schoolName
+				}
+			})
 		}
 		onLoad () {
 			this.avatar = this.$WX.getStorage('avatar')
 			this.redFlowerAmount = this.$WX.getStorage('redFlowerNum')
 			this.$API('GetSchoolList')
 				.then(res => {
-					res.data.forEach(item => {
-						this.schoolList.push(item.schoolName)
-					})
+					this.schoolList = res.data
 					this.$API('GetWithdrawInfo')
 						.then(res => {
 							this.getAjaxInfo(res.data)
@@ -144,8 +152,8 @@
 		}
 		methods = {
 			onSubmit () {
-				if (this.amount < 10) {
-					this.$WX.toast('最低提现10朵小红花哟')
+				if (this.amount < 5) {
+					this.$WX.toast('最低提现5朵小红花哟')
 				} else if (this.amount > this.redFlowerAmount) {
 					this.$WX.toast('不可以透支未来的小红花哟')
 				} else {

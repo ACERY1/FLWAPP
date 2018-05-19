@@ -46,7 +46,7 @@ view{
 
 
 .l-container__normal{
-	@include genContainer(0rpx,20rpx);
+	@include genContainer(0rpx,20rpx)
 }
 
 .relative{
@@ -265,4 +265,7 @@ p.title-bar{
 		vertical-align: bottom;
 	}
 }
+
+
+
 

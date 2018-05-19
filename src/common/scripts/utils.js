@@ -76,10 +76,10 @@ const isIdentityCard = (IdentityCard) => {
 }
 
 const isCardNumber = (CardNumber) => {
-	if (CardNumber.length < 16 || CardNumber.length > 19) {
+	if (CardNumber.length <= 14 || CardNumber.length >= 26) {
 		return false
 	}
-	let reg = /\d{16,19}/
+	let reg = /\d{15,25}/
 	return reg.test(CardNumber.toString())
 }
 /**
@@ -113,9 +113,9 @@ const transformTime = (data, option) => {
 	}
 	const date = new Date(parseInt(data) * 1000)
 	if (option && option === 'year_month_day') {
-		return date.getFullYear() + '-' + date.getMonth() + 1 + '-' + (date.getDate() > 9 ? date.getDate() : '0' + date.getDate())
+		return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + (date.getDate() > 9 ? date.getDate() : '0' + date.getDate())
 	}
-	return date.getFullYear() + '-' + date.getMonth() + 1
+	return date.getFullYear() + '-' + (date.getMonth() + 1)
 }
 // 将正常时间转换为UNIX时间戳
 const transformTimeToUnix = (data) => {

@@ -72,9 +72,7 @@
 					width: 128rpx;
 					height: 128rpx;
 					border-radius: 50%;
-					background-color: #03a9f4;
 					margin-right: 40rpx;
-					object-fit: none;
 				}
 				&-info {
 					width: 480rpx;
@@ -112,7 +110,7 @@
 	<view class="stuTrend">
 		<view class="stuTrend-search">
 			<div>
-				<image src="../../static/images/stuTrend/search.svg" />
+				<image src="../static/images/stuTrend/search.svg" />
 				<input placeholder="搜索姓名，行业，单位，专业" maxlength="20" bindinput="searchItemInput" class="stuTrend-search-active"/>
 			</div>
 			<view class="stuTrend-search-button" @tap="searchButtonClick">搜索</view>
@@ -130,7 +128,7 @@
 		<view class="stuTrend-infoList">
 			<repeat for="{{studentCurrentList}}" item="item" wx:if="{{roleData.currentData === '学生'}}">
 				<view class="stuTrend-infoList-item" id="{{item.userId}}" @tap="jumpToUserPage">
-					<image src="{{item.avatar}}" class="stuTrend-infoList-item-image"/>
+					<image src="{{item.avatar}}" class="stuTrend-infoList-item-image" mode="aspectFill" binderror="imageError" id="stu-{{item.userId}}"/>
 					<view class="stuTrend-infoList-item-info">
 						<view class="stuTrend-infoList-item-info-name">{{item.name}}</view>
 						<view class="stuTrend-infoList-item-info-more">
@@ -143,7 +141,7 @@
 			</repeat>
 			<repeat for="{{tutorCurrentList}}" item="item" wx:if="{{roleData.currentData === '导师'}}">
 				<view class="stuTrend-infoList-item"  id="{{item.userId}}" @tap="jumpToUserPage">
-					<image src="{{item.avatar}}" class="stuTrend-infoList-item-image"/>
+					<image src="{{item.avatar}}" class="stuTrend-infoList-item-image" mode="aspectFill" binderror="imageError" id="tutor-{{item.userId}}"/>
 					<view class="stuTrend-infoList-item-info">
 						<view class="stuTrend-infoList-item-info-name">{{item.name}}</view>
 						<view class="stuTrend-infoList-item-info-more">
@@ -271,11 +269,8 @@
 			this.$apply()
 		}
 		onLoad () {
-			if (this.$WX.getStorage('role') === 2) {
-				this.roleData.currentData = '导师'
-			} else {
-				this.roleData.currentData = '学生'
-			}
+			this.$WX.showLoading()
+			this.roleData.currentData = '学生'
 			this.$API('GetSearchTutorList')
 				.then(res => {
 					res.data.map(item => {
@@ -288,6 +283,7 @@
 							item.avatar = '../../static/images/logo.png'
 						})
 						this.$apply()
+						this.$WX.hideLoading()
 					} else {
 						this.$API('PostUserImagesName', this.tutorAvatarList)
 							.then(res => {
@@ -296,6 +292,7 @@
 								})
 								this.tutorCurrentList = this.tutorList
 								this.$apply()
+								this.$WX.hideLoading()
 							})
 					}
 				})
@@ -310,6 +307,7 @@
 						this.studentList.map(item => {
 							item.avatar = '../../static/images/logo.png'
 						})
+						this.$WX.hideLoading()
 						this.$apply()
 					} else {
 						this.$API('PostUserImagesName', this.studentAvatarList)
@@ -318,6 +316,7 @@
 									this.studentList[index].avatar = item
 								})
 								this.studentCurrentList = this.studentList
+								this.$WX.hideLoading()
 								this.$apply()
 							})
 					}
@@ -338,55 +337,95 @@
 		}
 		methods = {
 			searchButtonClick () {
+				this.$WX.showLoading()
+				console.log('搜索')
 				if (this.roleData.currentData === '学生') {
 					this.searchStudentAvatarList = []
-					this.$API('GetSearchStudentList', {word: this.searchText})
+					this.$API('GetSearchStudentList', {word: encodeURI(this.searchText)})
 						.then(res => {
 							res.data.map(item => {
 								this.searchStudentAvatarList.push(item.userId + '-avatar.jpg')
 							})
 							this.studentList = res.data
+							this.studentCurrentList = this.studentList
 							this.$apply()
-							this.$API('PostUserImagesName', this.searchStudentAvatarList)
+							this.$WX.hideLoading()
+							if (this.$WX.getStorage('role') !== 0) {
+								this.$API('PostUserImagesName', this.searchStudentAvatarList)
 								.then(res => {
 									res.data.map((item, index) => {
 										this.studentList[index].avatar = item
 									})
-									this.studentCurrentList = this.studentList
 									this.$apply()
 								})
+							} else {
+								this.studentList.map(item => {
+									item.avatar = '../../static/images/logo.png'
+									this.$apply()
+								})
+							}
+						})
+						.catch(err => {
+							console.log(err)
 						})
 				} else {
 					this.searchTutorAvatarList = []
-					this.$API('GetSearchTutorList', {word: this.searchText})
+					this.$WX.showLoading()
+					this.$API('GetSearchTutorList', {word: encodeURI(this.searchText)})
 						.then(res => {
 							res.data.map(item => {
 								this.searchTutorAvatarList.push(item.userId + '-avatar.jpg')
 							})
 							this.tutorList = res.data
+							this.tutorCurrentList = this.tutorList
 							this.$apply()
-							this.$API('PostUserImagesName', this.searchTutorAvatarList)
+							this.$WX.hideLoading()
+							if (this.$WX.getStorage('role') !== 0) {
+								this.$API('PostUserImagesName', this.searchTutorAvatarList)
 								.then(res => {
 									res.data.map((item, index) => {
 										this.tutorList[index].avatar = item
 									})
-									this.tutorCurrentList = this.tutorList
 									this.$apply()
 								})
+							} else {
+								this.tutorList.map(item => {
+									item.avatar = '../../static/images/logo.png'
+									this.$apply()
+								})
+							}
 						})
+						.catch(err => {
+							console.log(err)
+						})
+				}
+			},
+			imageError (event) {
+				let mark = event.target.id
+				if (mark.slice(0, 1) === 's') {
+					this.studentCurrentList.filter(item => item.userId === parseInt(mark.slice(4)))[0].avatar = '../static/images/logo.png'
+				} else {
+					this.tutorCurrentList.filter(item => item.userId === parseInt(mark.slice(6)))[0].avatar = '../static/images/logo.png'
 				}
 			},
 			searchItemInput (event) {
 				this.searchText = event.detail.value
+				this.$apply()
 			},
 			jumpToUserPage (event) {
-				this.$WX.setStorage('visit_userId', parseInt(event.target.id))
-				if (this.roleData.currentData === '学生') {
-					this.$WX.setStorage('visit_role', 1)
+				if (this.$WX.getStorage('role') === 0) {
+					this.$WX.interceptTourist()
 				} else {
-					this.$WX.setStorage('visit_role', 2)
+					this.$WX.setStorage('visit_userId', parseInt(event.currentTarget.id))
+					if (this.roleData.currentData === '学生') {
+						this.$WX.setStorage('visit_role', 1)
+						this.$preload('stuId', parseInt(event.currentTarget.id))
+					} else {
+						this.$WX.setStorage('visit_role', 2)
+						this.$preload('tutorId', parseInt(event.currentTarget.id))
+					}
+						this.$WX.jumpTo('./user/personalPage')
 				}
-				this.$WX.jumpTo('./user/personalPage')
 			}
 		}
 		events = {
@@ -407,10 +446,12 @@
 			},
 			'dropDownItemClick': (key, index) => {
 				if (key === 'role') {
+					console.log('切换导师')
 					this.roleData.isClick = !this.roleData.isClick
 					this.roleData.isHidden = !this.roleData.isHidden
 					this.roleData.currentData = this.roleData.data[index]
 					this.roleIndex = index
+					this.searchText = ''
 				}
 				if (key === 'school') {
 					this.optionData[0][0].isClick = !this.optionData[0][0].isClick

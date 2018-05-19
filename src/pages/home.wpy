@@ -3,9 +3,11 @@
 </style>
 
 <template>
-	<swiper :BannerDatas.sync="BannerDatas"/>
-	<news :NewsDatas.sync="NewsDatas" :FlowerRankDatas.sync="FlowerRankDatas"/>
-	<bar />
+	<view>
+		<Swiper :BannerDatas.sync="BannerDatas"/>
+		<News :NewsDatas.sync="NewsDatas" :FlowerRankDatas.sync="FlowerRankDatas"/>
+		<Bar :role.sync="role"/>
+	</view>
 </template>
 
 <script>
@@ -21,41 +23,61 @@
 			navigationBarTitleText: '首页'
 		}
 		components = {
-			swiper: Swiper,
-			news: News,
-			bar: Bar
+			Swiper: Swiper,
+			News: News,
+			Bar: Bar
 		}
 		data = {
 			NewsDatas: [],
 			FlowerRankDatas: [],
+			tradeList: [],
 			BannerDatas: [],
 			page: 0,
-			isLastPage: false
+			isLastPage: false,
+			role: 0
 		}
 		computed = {}
 
 		GetNewsDatas (data) {
-			data.map(item => {
-				this.NewsDatas.push(
-					{
-						id: item.id,
-						title: item.title,
-						author: item.name || '匿名',
-						pageView: item.pageView || 'NaN',
-						time: moment(item.createTime.split('.')[0], 'YYYY-MM-DD hh:mm:ss').fromNow() || '',
-						tag: item.tag
+			moment.locale('zh-cn')
+			if (typeof data !== 'undefined' && data.length > 0) {
+				data.map(item => {
+					if (parseInt(item.tag) === parseInt(item.tag)) {
+						if (item.tag === -1) {
+							item.tag = '未知'
+						} else {
+							try {
+								item.tag = this.tradeList.filter(tradeItem => tradeItem.id === parseInt(item.tag))[0].tradeName
+							} catch (e) {
+								item.tag = '未知'
+							}
+						}
 					}
-				)
-			})
+					let imgUrl = '../static/images/logo.png'
+					let imageList = item.content.split(' ').filter(item => item.indexOf('src', 0) === 0).map(item => item.slice(item.indexOf('http', 0), item.length - 1))
+					if (imageList.length > 0) {
+						imgUrl = imageList[0]
+					}
+					this.NewsDatas.push(
+						{
+							id: item.id,
+							title: item.title,
+							author: item.name || '匿名',
+							pageView: item.pageView || '1',
+							time: moment(item.createTime.split('.')[0], 'YYYY-MM-DD hh:mm:ss').fromNow() || '',
+							tag: item.tag,
+							imgUrl: imgUrl
+						}
+					)
+				})
+			}
 		}
 
 		GetBannerDatas (data) {
-			const bannerImgList = []
 			data.map(item => {
-				bannerImgList.push(item['a'])
 				this.BannerDatas.push({
 					imgSrc: item['a'],
-					title: item['c'],
+					title: item['c'] || '海鲸教育基金会',
 					id: item['b']
 				})
 			})
@@ -65,63 +87,73 @@
 			const avatarList = []
 			data.map(item => {
 				avatarList.push(item.userId)
-				this.FlowerRankDatas.push(item)
+				this.FlowerRankDatas.push({
+					tutorName: item.tutorName || '神秘导师' + item.userId,
+					giftFlowerNum: item.giftFlowerNum,
+					userId: item.userId
+				})
 			})
 		}
 
 		onLoad () {
-			this.$API('GetNewsList', {page: this.page})
+			this.$WX.showLoading()
+			this.$API('GetTrade')
 				.then(res => {
+					this.tradeList = res.data
+					return this.$API('GetNewsList', {page: this.page})
+				})
+				.then(res => {
+					this.role = this.$WX.getStorage('role') // 首次获取role
 					this.page++
 					this.GetNewsDatas(res.data)
+					return this.$API('GetBanner')
+				})
+				.then(res => {
+					this.GetBannerDatas(res.data)
+					this.$WX.hideLoading()
 					this.$apply()
-					this.$API('GetBanner')
-						.then(res => {
-							this.GetBannerDatas(res.data)
-							this.$apply()
-						})
-					this.$API('GetFlowerRank')
-						.then(res => {
-							this.GetFlowerRankDatas(res.data)
-							this.$apply()
-						})
 				})
 		}
 		onShow () {
-			if (this.$WX.getStorage('role') === 0) {
-				this.$WX.modal('您尚未注册，是否前往注册？', '提示')
-					.then(res => {
-							if (res.confirm) {
-								this.$WX.toast('正前往注册页面')
-								this.$WX.jumpTo('./account/login')
-							} else if (res.cancel) {
-								this.$WX.reLaunch('./home')
-							}
-						}
-					)
-			}
+			this.role = this.$WX.getStorage('role')
+			wx.openBluetoothAdapter({
+				success: function (res) {
+					console.log(res)
+				}
+			})
+			this.FlowerRankDatas = []
+			this.$API('GetFlowerRank')
+				.then(res => {
+					this.GetFlowerRankDatas(res.data)
+							this.$apply()
+				})
 		}
 		onPullDownRefresh () {
+			console.log('下拉刷新')
 			this.NewsDatas = []
-			this.BannerDatas = []
 			this.FlowerRankDatas = []
+			this.page = 0
 			this.$API('GetNewsList', {page: 0})
 				.then(res => {
 					this.page++
 					this.GetNewsDatas(res.data)
-					this.$API('GetBanner')
-						.then(res => {
-							this.GetBannerDatas(res.data)
-							this.$API('GetFlowerRank')
-								.then(res => {
-									this.GetFlowerRankDatas(res.data)
-									this.$apply()
-									wx.stopPullDownRefresh()
-								})
-						})
+					return this.$API('GetFlowerRank')
+				})
+				.then(res => {
+					this.GetFlowerRankDatas(res.data)
+					this.$apply()
+					return this.$API('GetBanner')
+				})
+				.then(res => {
+					this.GetBannerDatas(res.data)
+					setTimeout(() => {
+						wx.stopPullDownRefresh()
+					}, 500)
+					this.$apply()
 				})
 		}
 		onReachBottom () {
+			console.log('上拉加载', this.page)
 			if (!this.isLastPage) {
 				this.$API('GetNewsList', {page: this.page})
 					.then(res => {
@@ -130,7 +162,6 @@
 							this.page++
 							this.GetNewsDatas(res.data)
 						} else if (res.data.length === 0) {
-							this.$WX.toast('没有更多内容了')
 							this.isLastPage = true
 						}
 					})
@@ -139,21 +170,23 @@
 		methods = {}
 		events = {
 			'jumpToArticle': (key) => {
-				console.log(key)
 				this.$WX.setStorage('articleId', key)
 				this.$WX.jumpTo('./article')
 			},
 			'jumpToTutorPage': (key) => {
-				this.$WX.setStorage('visit_userId', parseInt(key))
-				this.$WX.setStorage('visit_role', 2)
-				this.$WX.jumpTo('./user/personalPage')
+				if (this.$WX.getStorage('role') === 0) {
+					this.$WX.interceptTourist()
+				} else {
+					this.$WX.setStorage('visit_userId', parseInt(key))
+					this.$WX.setStorage('visit_role', 2)
+					this.$WX.jumpTo('./user/personalPage')
+				}
 			},
 			'BarClick': (key) => {
 				if (key === 'student') {
 					this.$WX.jumpTo('./writeArticle')
 				} else if (key === 'tutor') {
-					this.$WX.toast('tutor')
-					//	this.$WX.jumpTo('')
+						this.$WX.jumpTo('./user/topUp')
 				}
 			}
 		}

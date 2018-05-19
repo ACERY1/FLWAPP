@@ -3,6 +3,10 @@
 		padding-top: 48rpx;
 		padding-right: 30rpx;
 		padding-left: 30rpx;
+		&-img {
+			width: 500rpx;
+			height: 500rpx;
+		}
 		&-title {
 			margin-bottom: 10rpx;
 			font-size: 34rpx;
@@ -38,12 +42,10 @@
 		</view>
 		<view class="article-info">
 			<span>{{articleData.time}}</span>
-			<span id="{{articleData.userId}}">{{articleData.author}}</span>
+			<span id="{{articleData.userId}}" @tap="jumpToUserPage" data-role="{{articleData.role}}">{{articleData.author}}</span>
 			<span>阅读次数：{{articleData.pageView}}</span>
 		</view>
-		<view class="article-body">
-			{{articleData.content}}
-		</view>
+		<rich-text class="article-body" nodes="{{articleData.content}}" />
 	</view>
 </template>
 
@@ -61,9 +63,11 @@
 			articleData: {}
 		}
 		GetArticleData (data) {
+			moment.locale('zh-cn')
 			this.articleData = {
 			title: data.title || '标题',
 			content: data.content || '内容',
+			role: data.role,
 			time: moment(data.createTime.split('.')[0], 'YYYY-MM-DD hh:mm:ss').fromNow() || '发表时间',
 			userId: data.userId,
 			author: data.author || '匿名',
@@ -78,7 +82,23 @@
 					this.$apply()
 				})
 		}
-		methods = {}
+		methods = {
+			jumpToUserPage (event) {
+				if (this.$WX.getStorage('role') === 0) {
+					this.$WX.interceptTourist()
+				} else {
+					this.$WX.setStorage('visit_userId', parseInt(event.target.id))
+					if (event.target.dataset.role === 1) {
+						this.$WX.setStorage('visit_role', 1)
+						this.$preload('stuId', parseInt(event.target.id))
+					} else {
+						this.$WX.setStorage('visit_role', 2)
+						this.$preload('tutorId', parseInt(event.target.id))
+					}
+						this.$WX.jumpTo('./user/personalPage')
+				}
+			}
+		}
 		events = {}
 		props = {}
 	}

@@ -1,5 +1,8 @@
 <style lang="scss" type="text/scss">
+	/* 全局动画 */
+	@import "./common/styles/ani.wxss";
 </style>
+
 
 <script>
 	import wepy from 'wepy'
@@ -20,10 +23,17 @@
 				'pages/account/scholarship',
 				'pages/account/activity',
 				'pages/user/personalPage',
+				'pages/user/topUp',
 				'pages/article',
 				'pages/home',
 				'pages/writeArticle',
-				'pages/stuTrend'
+				'pages/stuTrend',
+				'pages/account/tutor',
+				'pages/user/articleList',
+				'pages/user/student',
+				'pages/user/tutor',
+				'pages/user/flower',
+				'pages/account/workedTime'
 			],
 			'window': {
 				'backgroundTextStyle': 'light',
@@ -50,7 +60,7 @@
 						{
 							'pagePath': 'pages/stuTrend',
 							'iconPath': 'static/images/tabBar/focus.png',
-							'text': '导学',
+							'text': '寻鲸',
 							'selectedIconPath': 'static/images/tabBar/focus_selected.png'
 						},
 						{
@@ -59,15 +69,6 @@
 							'text': '我的',
 							'selectedIconPath': 'static/images/tabBar/me_selected.png'
 						}
-						/* TODO 下面是测试用tabbar */
-						/*
-						{
-							'pagePath': 'pages/test/test',
-							'iconPath': 'static/images/tabBar/me.png',
-							"text": "Van",
-							'selectedIconPath': 'static/images/tabBar/me_selected.png'
-						}
-						*/
 					]
 				}
 		}

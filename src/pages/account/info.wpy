@@ -1,7 +1,7 @@
 <style lang="scss" type="text/scss">
 	@import "../../common/styles/variables";
 	@import "../../common/styles/mixins";
-	@import "../../common/styles/animate";
+	/*@import "../../common/styles/animate";*/
   @import "../../common/styles/common";
 
   .info-container {
@@ -18,22 +18,21 @@
     flex-flow: row nowrap;
     align-items: center;
   }
-  .info-item-container {
+  .info-item-input-container {
     display: flex;
     flex-flow: row nowrap;
   }
-
   .info-item-name {
     width: 310rpx;
   }
   .info-item-input {
     text-align:right;
+    width: 350rpx;
     @include fontSizeColor(32rpx, #666666);
   }
   .Info-Tag {
     width: 30rpx;
     height: 50rpx;
-    //  padding-bottom:6rpx;
 		margin-bottom: 5rpx;
     padding-right: 10rpx;
     padding-left: 10rpx;
@@ -52,7 +51,7 @@
   .info-tag-value {
     display: inline-flex;
     position: absolute;
-    right: 30rpx;
+    right: 60rpx;
     @include fontSizeColor(32rpx, #666666);
   }
   .info-module {
@@ -81,13 +80,13 @@
 		flex-flow: row wrap;
 		margin-left: 30rpx;
 		margin-bottom: 50rpx;
+    @include fontSizeColor(20rpx, #666666);
 		&-info {
 			display: flex;
 			flex-flow: column nowrap;
 			justify-content: center;
 			align-items: center;
 			background-color: #f8f8f8;
-			@include fontSizeColor(18rpx, #666666);
 			width: 210rpx;
 			height: 210rpx;
 			margin-right: 30rpx;
@@ -138,6 +137,7 @@
     flex-flow: column;
     justify-content: center;
     align-items: center;
+    padding-bottom: 50rpx;
     image {
       height: 80rpx;
       width: 80rpx;
@@ -179,8 +179,7 @@
     </view>
     <div class="info-item-container info-item-avatar-container">
         <label class="info-item-name">头像</label>
-        <image src="{{avatar}}" class="info-item-avatar-img" alt="我的头像" @tap="changeAvatar"/>
-        <image src="../../static/images/personalCenter/arrow-right.svg" class="Info-Tag info-item-avatar-tag" @tap="changeAvatar"/>
+        <image src="{{avatar}}" class="info-item-avatar-img" alt="我的头像" @tap="changeAvatar" mode="aspectFill" binderror="avatarError"/>
     </div>
     <ul class="info-container">
       <repeat for="{{optionList}}" item="item" index="index">
@@ -189,10 +188,9 @@
             <label class="info-item-name info-item-repair-name">{{item.name}}</label>
             <div class="info-tag-value">
               <Picker :Datas="item.data" :PickerIsDisabled="item.disabled" :syncNumber.sync="item.index" :PickerId="item.id" :value.sync="item.value" :Mode="item.mode"/>
-              <image class="Info-Tag" src="../../static/images/personalCenter/arrow-right.svg"/>
             </div>
           </view>
-          <view wx:if="{{item.type === 'input'}}" class="info-item-container">
+          <view wx:if="{{item.type === 'input'}}" class="info-item-input-container">
             <label class="info-item-name">{{item.name}}</label>
             <input placeholder="请填写" class="info-item-input" bindblur="onBlur" id="{{item.id}}" value="{{item.value}}"/>
           </view>
@@ -209,7 +207,7 @@
     <ul class="info-container">
       <repeat for="{{identityList}}" item="item" index="index">
         <div class="info-item-container">
-          <view wx:if="{{item.type === 'input'}}" class="info-item-container">
+          <view wx:if="{{item.type === 'input'}}" class="info-item-input-container">
             <label class="info-item-name">{{item.name}}</label>
             <input placeholder="请填写" class="info-item-input" bindblur="onBlur" id="{{item.id}}" value="{{item.value}}" maxlength="{{item.maxLength}}"/>
           </view>
@@ -223,9 +221,9 @@
       <span class="info-module-title">个人简历</span>
     </view>
     <div class="info-container">
-      <textarea class="info-textarea" maxlength="600" bindinput="onInput" id="resume" value="{{personalIntro.value}}">
+      <textarea class="info-textarea" maxlength="2000" bindinput="onInput" id="resume" value="{{personalIntro.value}}">
       </textarea>
-      <span class="info-textarea-count">{{personalIntro.length}}/600</span>
+      <span class="info-textarea-count">{{personalIntro.length}}/2000</span>
     </div>
   </view>
   <view wx:if="{{identity === 'student'}}">
@@ -233,29 +231,28 @@
       <div class="info-module-title-Icon">1</div>
       <span class="info-module-title">问题</span>
     </view>
-		<view class="info-module-problem">{{problem}}</view>
-    <div class="info-container">
-      <textarea class="info-textarea" maxlength="200" bindinput="onInput" id="answer" value="{{answer.value}}">
-      </textarea>
-      <span class="info-textarea-count">{{answer.length}}/200</span>
-    </div>
+    <repeat for="{{questionList}}" item="item" index="index">
+      <view class="info-module-problem">{{item.title}}</view>
+      <div class="info-container">
+        <textarea class="info-textarea" maxlength="1000" bindinput="onInputQuestion" data-index="{{index}}" value="{{answerList[index].answerContent}}">
+        </textarea>
+        <span class="info-textarea-count" >{{answerList[index].answerContent.length}}/1000</span>
+      </div>
+    </repeat>
   </view>
   <view wx:if="{{identity === 'student'}}">
     <view class="info-module">
       <div class="info-module-title-Icon">1</div>
-      <span class="info-module-title">附件</span>
+      <span class="info-module-title">附件（格式仅支持图片，限5张，选填)</span>
     </view>
     <view class="info-upload-images">
+      <view style="padding-right: 26rpx">提交相关材料证明你的才华，包括但不限于证书、奖状、各项证明。如有小红花认证导师的推荐信，推荐下将成为重要的参评材料。</view>
 			<view class="info-upload-images-info">
-				<image src="../../static/images/personalCenter/附件.png" @tap="upLoad"/>
-				<view>
-					<view style="text-align: center">点击添加图片(最多5张)</view>
-					<view style="text-align: center">提交相关材料证明你的才华，包括但不限于证书、奖状、各项证明等</view>
-				</view>
+				<image src="../../static/images/personalCenter/attach.png" @tap="upLoad"/>
 			</view>
 			<repeat for="{{imagesList}}" item="item">
 				<view>
-					<image src="{{item}}" class="info-upload-images-list" data-index="{{index}}" @tap="imagePreview"/>
+					<image src="{{item}}" class="info-upload-images-list" data-index="{{index}}" @tap="imagePreview" mode="aspectFill"/>
 					<image class="info-upload-images-delete" src="../../static/images/article/delete.svg" wx:if="{{item.length > 0}}" data-index="{{index}}" @tap="imageDelete"/>
 				</view>
 			</repeat>
@@ -274,36 +271,35 @@
   import Picker from '../../components/Infos/Picker'
   export default class Info extends page {
     config = {
-      navigationBarTitleText: '修改信息'
+      navigationBarTitleText: '修改信息',
+      enablePullDownRefresh: false
     }
     components = {
       Picker: Picker
     }
     data = {
+      isFirstSubmitAnswer: false,
       optionList: [],
+      isSubmit: false,
+      flag: true,
       identityList: [],
       imagesList: [],
-			previewImageList: [],
+      previewImageList: [],
+      questionList: [],
       avatar: '',
       identity: '',
-			problem: '本文由我收集总结了一些前端面试题，初学者阅后也要用心钻研其中的原理，重要知识需要系统学习、透彻学习，形成自己的知识链。万不可投机取巧，临时抱佛脚只求面试侥幸混过关是错误的！也是不可能的！不可能的！不可能的！\n' +
-			'\n' +
-			'前端还是一个年轻的行业，新的行业标准， 框架， 库都不断在更新和新增，正如赫门在2015深JS大会上的《前端服务化之路》主题演讲中说的一句话：“每18至24个月，前端都会难一倍”，这些变化使前端的能力更加丰富、创造的应用也会更加完美。所以关注各种前端技术，跟上快速变化的节奏，也是身为一个前端程序员必备的技能之一。\n' +
-			'\n' +
-			'最近也收到许多微博私信的鼓励和更正题目信息，后面会经常更新题目和答案到github博客。希望前端er达到既能使用也会表达，对理论知识有自己的理解。可根据下面的知识点一个一个去进阶学习，形成自己的职业技能链。',
-      answer: {},
+      answerList: [],
+      questionAndAnswer: [],
       personalIntro: {},
-      isRight: false,
-      isFirst: true,
-      isPush: false,
-      sexData: ['请选择', '男', '女'],
-			degreeData: ['请选择', '本科', '硕士', '博士'],
-			schoolList: ['请选择'],
-			directionList: ['请选择'],
-			tradeList: ['请选择']
+      canSubmit: false,
+      sexData: ['男', '女'],
+			degreeData: ['本科', '硕士', '博士'],
+			schoolList: [],
+			directionList: [],
+			tradeList: []
     }
     computed = {}
-
+    //  获取全局配置接口中id匹配的数据
     //  若异步获取的数据属性值为空则设置其长度为0
     setTextLength (data) {
       if (typeof data === 'undefined') {
@@ -338,7 +334,7 @@
         {
           name: '性别',
           type: 'picker',
-          value: this.sexData[data.sex] || this.sexData[0],
+          value: this.sexData[data.sex - 1] || '请选择',
           data: this.sexData,
           mode: 'selector',
           id: 'gender'
@@ -346,15 +342,15 @@
         {
           name: '学校',
           type: 'picker',
-          value: this.schoolList[data.schoolId] || this.schoolList[0],
-          data: this.schoolList,
+          value: (data.schoolId !== -1 && (this.schoolList.filter(item => item.id === data.schoolId))[0].schoolName) || '请选择',
+          data: this.schoolList.map(item => item.schoolName),
           mode: 'selector',
           id: 'university'
         },
         {
           name: '学历',
           type: 'picker',
-          value: this.degreeData[data.degree] || this.degreeData[0],
+          value: this.degreeData[data.degree - 1] || '请选择',
           data: this.degreeData,
           mode: 'selector',
           id: 'degree'
@@ -383,8 +379,8 @@
           name: '申请方向',
           type: 'picker',
           mode: 'selector',
-          data: this.directionList,
-          value: this.directionList[data.direction] || this.directionList[0],
+          data: this.directionList.map(item => item.directionName),
+          value: (data.direction !== -1 && (this.directionList.filter(item => item.id === data.direction))[0].directionName) || '请选择',
           id: 'orientation'
         },
         {
@@ -415,13 +411,15 @@
           maxLength: 19,
           value: data.bankNumber || '',
           id: 'cardNumber'
+        }, {
+          name: '开户行',
+          type: 'input',
+          maxLength: 19,
+          value: data.bankBranch || '',
+          id: 'bankBranch'
         }
       ]
       this.avatar = this.$WX.getStorage('avatar')
-      this.answer = {
-        value: data.answer || '',
-        length: this.setTextLength(data.answer)
-      }
       this.personalIntro = {
         value: data.personalIntro || '',
         length: this.setTextLength(data.personalIntro)
@@ -439,7 +437,7 @@
 				{
 					name: '性别',
 					type: 'picker',
-					value: this.sexData[data.sex] || this.sexData[0],
+					value: this.sexData[data.sex - 1] || '请选择',
 					data: this.sexData,
 					mode: 'selector',
 					id: 'gender'
@@ -448,9 +446,9 @@
           name: '行业',
           type: 'picker',
           mode: 'selector',
-          data: this.tradeList,
-          value: this.tradeList[data.trade] || this.tradeList[0],
-          id: 'orientation'
+          data: this.tradeList.map(item => item.tradeName),
+          value: (data.trade !== -1 && (this.tradeList.filter(item => item.id === data.trade))[0].tradeName) || '请选择',
+          id: 'trade'
         },
         {
           name: '公司/机构',
@@ -480,102 +478,207 @@
     getDatas () {
       let datas
       if (this.identity === 'student') {
+        console.log(this.schoolList.filter(item => item.schoolName === this.optionList[3].value))
         datas = {
           name: this.optionList[0].value,
           birthday: this.$UTIL.transformTimeToUnix(this.optionList[1].value),
-          sex: this.sexData.indexOf(this.optionList[2].value) || 0,
-          schoolId: this.schoolList.indexOf(this.optionList[3].value) || 0,
-          degree: this.degreeData.indexOf(this.optionList[4].value) || 0,
+          sex: this.sexData.indexOf(this.optionList[2].value) + 1 || 0,
+          schoolId: this.schoolList.filter(item => item.schoolName === this.optionList[3].value)[0].id || '',
+          degree: this.degreeData.indexOf(this.optionList[4].value) + 1 || 0,
           academy: this.optionList[5].value,
           profession: this.optionList[6].value,
           admissionDate: this.$UTIL.transformTimeToUnix(this.optionList[7].value),
-          direction: this.directionList.indexOf(this.optionList[8].value) || 0,
+          direction: this.directionList.filter(item => item.directionName === this.optionList[8].value)[0].id || -1,
           simpleIntro: this.optionList[9].value,
           idNum: this.identityList[1].value,
           bankNumber: this.identityList[2].value,
+          bankBranch: this.identityList[3].value,
           stuNumber: this.identityList[0].value,
-          answer: this.answer.value,
           personalIntro: this.personalIntro.value,
-          attach_num: this.$WX.getStorage('attach_num')
+          attachNum: this.$WX.getStorage('attach_num')
+        }
+        if (this.isFirstSubmitAnswer) {
+          this.answerList.map(item => {
+            return {
+              questionId: item.questionId,
+              answerContent: item.answerContent
+            }
+          })
+          console.log(this.answerList)
+          this.$API('EditAnswer', JSON.stringify(this.answerList))
+        } else {
+          console.log(this.answerList)
+          this.$API('EditAnswer', JSON.stringify(this.answerList))
         }
 				this.$API('SendStudentProfile', JSON.stringify(datas))
           .then(res => {
             if (res.code === 0) {
               this.$WX.toast('提交成功')
-              this.$WX.jumpTo('home')
+              setTimeout(() => {
+                this.$WX.jumpTo('./home')
+              }, 1500)
             } else {
               this.$WX.toast('提交失败')
             }
+          })
+          .catch(err => {
+            console.error(err)
+            this.$WX.toast('网络故障，请稍后再尝试')
           })
       }
       if (this.identity === 'tutor') {
         datas = {
           name: this.optionList[0].value,
-          sex: this.optionList[1].value || 0,
-          trade: this.optionList[2].value || 0,
+          sex: this.sexData.indexOf(this.optionList[1].value) + 1 || 0,
+          trade: this.tradeList.filter(item => item.tradeName === this.optionList[2].value)[0].id || -1,
           company: this.optionList[3].value,
           position: this.optionList[4].value,
           simpleIntro: this.optionList[5].value,
           personalIntro: this.personalIntro.value
         }
         this.$API('SendTutorProfile', JSON.stringify(datas))
-          .then(data => {
-            if (data.data.code === 0) {
+          .then(res => {
+            if (res.code === 0) {
               this.$WX.toast('提交成功')
+              setTimeout(() => {
+                this.$WX.jumpTo('./home')
+              }, 1500)
             } else {
               this.$WX.toast('提交失败')
             }
+          })
+          .catch(err => {
+            console.error(err)
+            this.$WX.toast('网络故障，请稍后再尝试')
           })
       }
     }
     onLoad () {
       this.avatar = this.$WX.getStorage('avatar')
-      if (this.$WX.getStorage('isSave') === true) {
-        console.log('从本地缓存获取数据')
+      if (this.$WX.getStorage('isSave') === true && this.$WX.getStorage('isSubmit') === false) {
         this.optionList = this.$WX.getStorage('optionList')
-        this.identityList = this.$WX.getStorage('identityList')
         this.personalIntro = this.$WX.getStorage('personalIntro')
-        this.answer = this.$WX.getStorage('answer')
         this.avatar = this.$WX.getStorage('avatar')
         this.identity = this.$WX.getStorage('identity')
+        if (this.$WX.getStorage('role') === 2) {
+          this.$API('GetTrade')
+						.then(res => {
+							res.data.forEach(item => {
+								this.tradeList = res.data
+              })
+						})
+        }
+        if (this.$WX.getStorage('role') === 1) {
+          this.$WX.showLoading()
+          Promise.all([
+            this.$API('GetQuestionList')
+              .then(res => {
+                res.data.forEach(item => {
+                  this.questionList.push(item)
+                })
+            }),
+            this.$API('GetDirection')
+              .then(res => {
+                this.directionList = res.data
+            }),
+            this.$API('GetSchoolList')
+              .then(res => {
+                this.schoolList = res.data
+            })
+          ])
+          .then(res => this.$API('GetAnswer', {userId: this.$WX.getStorage('userId')}))
+          .then(res => {
+            if (res.data.length === 0) {
+              this.isFirstSubmitAnswer = true
+              this.questionList.map(item => {
+                this.answerList.push({
+                  questionId: item.id,
+                  answerContent: ''
+                })
+              })
+            } else {
+              res.data.map(item => {
+                this.answerList.push({
+                  answerContent: item.answerContent,
+                  questionId: item.questionId,
+                  id: item.id
+                })
+              })
+            }
+            this.identityList = this.$WX.getStorage('identityList')
+            this.attachNum = this.$WX.getStorage('attach_num')
+            this.$WX.hideLoading()
+          })
+        }
       } else {
         if (this.$WX.getStorage('role') === 1) {
           this.identity = 'student'
-					this.$API('GetDirection')
-						.then(res => {
-							res.data.forEach(item => {
-								this.directionList.push(item.directionName)
-							})
-						})
-					this.$API('GetSchoolList')
-						.then(res => {
-							res.data.forEach(item => {
-								this.schoolList.push(item.schoolName)
-							})
-						})
-          this.$API('StudentProfile')
-            .then(data => {
-              this.treatAjaxDatasStudent(data.data)
-							for (let i = 0, attachNum = data.data.attachNum; i <= attachNum; i++) {
-								let attachImgName = this.$WX.getStorage('userId') + '-info-' + i + '.jpg'
-								this.$API('DownLoad', {attachImgName: attachImgName})
-									.then(res => {
-										this.imagesList.push(res.data)
-									})
-							}
-              this.$apply()
+          Promise.all([
+            this.$API('GetQuestionList')
+              .then(res => {
+                console.log('加载问题列表')
+                res.data.forEach(item => {
+                  this.questionList.push(item)
+                })
+              }),
+            this.$API('GetDirection')
+              .then(res => {
+                console.log('加载方向')
+                this.directionList = res.data
+            }),
+            this.$API('GetSchoolList')
+              .then(res => {
+                console.log('加载学校')
+                this.schoolList = res.data
+              }),
+            this.$API('GetAnswer', {userId: this.$WX.getStorage('userId')})
+              .then(res => {
+                if (res.data.length === 0) {
+                  this.isFirstSubmitAnswer = true
+                  this.questionList.map(item => {
+                    this.answerList.push({
+                      questionId: item.id,
+                      answerContent: ''
+                    })
+                  })
+                } else {
+                  res.data.map(item => {
+                    this.answerList.push({
+                      answerContent: item.answerContent,
+                      questionId: item.questionId,
+                      id: item.id
+                    })
+                  })
+                }    
+              })
+          ])
+          .then(() => this.$API('StudentProfile'))
+          .then(res => {
+            console.log('加载个人信息')
+            this.treatAjaxDatasStudent(res.data)
+            for (let i = 0, attachNum = res.data.attachNum; i < attachNum; i++) {
+              let attachImgName = this.$WX.getStorage('userId') + '-info-' + i + '.jpg'
+              this.$API('DownLoad', {attachImgName: attachImgName})
+                .then(res => {
+                  this.imagesList.push(res.data)
+                  console.log('加载附件')
+              })
+            }
+            this.$WX.hideLoading()
+            this.$apply()
           })
-        } else if (this.$WX.getStorage('role') === 2) {
+        } else {
           this.identity = 'tutor'
-					this.$API('GetTrade')
-						.then(res => {
-							res.data.forEach(item => {
-								this.TradeList.push(item.tradeName)
-							})
-						})
-          this.$API('TutorProfile')
+          this.$API('GetTrade')
+            .then(res => {
+              res.data.forEach(item => {
+							this.tradeList = res.data
+            })
+            return this.$API('TutorProfile')
+					})
             .then(data => {
               this.treatAjaxDatasTutor(data.data)
+              this.$WX.hideLoading()
               this.$apply()
           })
         }
@@ -585,12 +688,16 @@
       this.$WX.setStorage('optionList', this.optionList)
       this.$WX.setStorage('identityList', this.identityList)
       this.$WX.setStorage('avatar', this.avatar)
-      this.$WX.setStorage('answer', this.answer)
       this.$WX.setStorage('personalIntro', this.personalIntro)
       this.$WX.setStorage('identity', this.identity)
+      this.$WX.setStorage('isSave', true)
     }
     props = {}
     methods = {
+      avatarError (event) {
+        this.avatar = '../../static/images/logo.png'
+        this.$apply()
+      },
       ButtonClick (event) {
         const that = this
         if (event.target.id === 'save') {
@@ -598,7 +705,8 @@
           this.$WX.setStorage('isSave', true)
         }
         if (event.target.id === 'submit') {
-          if (this.checkingValue()) {
+          this.checkingValue()
+          if (this.canSubmit) {
             const confirm = () => {
               this.$WX.setStorage('isSave', false)
 							this.getDatas()
@@ -611,8 +719,8 @@
               content: '审核结束前，不可修改个人资料，确认提交吗?',
               success: function (res) {
                 if (res.confirm) {
+                  that.$WX.setStorage('isSubmit', true)
                   confirm()
-                  that.$WX.jumpTo('./home')
                 } else if (res.cancel) {
                   cancel()
                 }
@@ -626,16 +734,15 @@
       },
       //  实时更新多行输入框的长度
       onInput (event) {
-        if (event.target.id === 'answer') {
-          this.answer.value = event.detail.value
-          this.answer.length = this.answer.value.length
-        }
-        if (event.target.id === 'resume') {
-          this.personalIntro.value = event.detail.value
-          this.personalIntro.length = this.personalIntro.value.length
-        }
+        this.personalIntro.value = event.detail.value
+        this.personalIntro.length = this.personalIntro.value.length
+        this.$WX.setStorage('isSubmit', false)
+      },
+      onInputQuestion (event) {
+        this.answerList[event.target.dataset.index].answerContent = event.detail.value
       },
       upLoad () {
+        const userId = this.$WX.getStorage('userId')
 				if (this.imagesList.length >= 5) {
 					this.$WX.toast('最多选择5张图片')
 					return
@@ -645,44 +752,32 @@
 						res.tempFilePaths.forEach(item => {
 							this.imagesList.push(item)
 						})
-						this.$apply()
+            this.$apply()
+            this.$WX.setStorage('attach_num', this.imagesList.length)
 						this.imagesList.forEach((item, index) => {
-							let imgPath = this.imagesList[index]
-							let imgName = this.$WX.getStorage('userId') + '-info-' + index + '.jpg'
+							let imgPath = item
+							let imgName = userId + '-info-' + index + '.jpg'
 							this.$API('UpLoad', {id: imgName})
 								.then(res => {
-									return res
-								})
-								.then(res => {
-									this.$WX.setStorage('attach_num', index + 1)
-									let token = res.data
-									this.$WX.UpLoadFile(imgPath, {'key': imgName, token: token})
-										.then(res => {
-											//	console.log(res)
-										})
-								})
+                  let token = res.data
+									return this.$WX.UpLoadFile(imgPath, {'key': imgName, token: token})
+                })
 						})
 					})
       },
 			imageDelete (event) {
-				console.log('删除图片')
-				let index = event.currentTarget.dataset.index
-				this.imagesList.splice(index, 1)
+        let index = event.currentTarget.dataset.index
+        const userId = this.$WX.getStorage('userId')
+        this.imagesList.splice(index, 1)
 				this.imagesList.forEach((item, index) => {
-					let imgPath = this.imagesList[index]
-					let imgName = this.$WX.getStorage('userId') + '-info-' + index + '.jpg'
+          let imgPath = item
+          let imgName = userId + '-info-' + index + '.jpg'
 					this.$API('UpLoad', {id: imgName})
 						.then(res => {
-							return res
-						})
-						.then(res => {
 							this.$WX.setStorage('attach_num', index + 1)
-							let token = res.data
-							this.$WX.UpLoadFile(imgPath, {'key': imgName, token: token})
-								.then(res => {
-									//	console.log(res)
-								})
-						})
+              let token = res.data
+							return this.$WX.UpLoadFile(imgPath, {'key': imgName, token: token})
+            })
 				})
 			},
 			imagePreview (event) {
@@ -699,52 +794,66 @@
 					this.avatar = res.tempFilePaths[0]
 					this.$apply()
 					let imgPath = this.avatar
-					let imgName = this.$WX.getStorage('userId') + '-avatar.jpg'
+          let imgName = this.$WX.getStorage('userId') + '-avatar.jpg'
+          this.$WX.setStorage('hasChangeAvatar', true)
+          console.log(this.$WX.getStorage('hasChangeAvatar'))
 					this.$API('UpLoad', {id: imgName})
 						.then(res => {
 							return res
 						})
 						.then(res => {
 							let token = res.data
-							this.$WX.UpLoadFile(imgPath, {'key': imgName, token: token})
-								.then(res => {
-									this.$WX.setStorage('hasAvatar', true)
-									this.$WX.setStorage('hasChangeAvatar', true)
-								})
-						})
+              this.$WX.UpLoadFile(imgPath, {'key': imgName, token: token})
+            })
 				})
     }
     checkingValue () {
-      for (let i = 0, len = this.optionList.length; i < len; i++) {
-        if (this.optionList[i].value === '') {
-          if (this.optionList[i].type === 'picker') {
-            this.$WX.toast('请选择' + this.optionList[i].name)
-          } else if (this.optionList[i].type === 'input') {
-            this.$WX.toast('请填写' + this.optionList[i].name)
-          }
-          return false
+      this.flag = true
+      this.optionList.forEach((item, index, array) => {
+        if (item.value === '' || item.value < 1) {
+          this.flag = false
         }
-      }
+      })
       if (this.identity === 'student') {
-        for (let i = 0, len = this.identityList.length; i < len; i++) {
-          this.$emit('input-blur', this.identityList[i].id, this.identityList[i].value)
-          if (!this.isRight) {
-            return false
+        this.identityList.forEach(item => {
+          this.$emit('input-blur', item.id, item.value)
+        })
+        this.answerList.forEach(item => {
+          if (item.answerContent.length === 0) {
+            this.$WX.toast('问题答案不能为空')
+            this.flag = false
           }
-        }
+        })
       }
-      return true
+      if (this.flag) {
+        this.canSubmit = true
+      } else {
+        this.canSubmit = false
+      }
     }
     events = {
       //  下拉框
       'changePicker': (key, index) => {
+        this.$WX.setStorage('isSubmit', false)
         this.optionList.forEach((item) => {
-          if (item.id === key) {
+          if ((item.id === key && key === 'gender') || (item.id === 'degree' && key === 'degree')) {
+            console.log(item.id)
             item.value = item.data[index]
+            this.$apply()
+          } else if (item.id === key && key === 'university') {
+            item.value = this.schoolList.filter((schoolItem, arrayIndex) => arrayIndex === parseInt(index))[0].schoolName
+            this.$apply()
+          } else if (item.id === key && key === 'orientation') {
+            item.value = this.directionList.filter((directionItem, arrayIndex) => arrayIndex === parseInt(index))[0].directionName
+            this.$apply()
+          } else if (item.id === key && key === 'trade') {
+            item.value = this.tradeList.filter((tradeItem, arrayIndex) => arrayIndex === parseInt(index))[0].tradeName
+            this.$apply()
           }
         })
       },
       'changeMultiPicker': (key, multiIndex) => {
+        this.$WX.setStorage('isSubmit', false)
         this.optionList.forEach((item) => {
           if (item.id === key) {
             item.value = item.data[0][multiIndex[0]] + '-' + item.data[1][multiIndex[1]]
@@ -753,9 +862,7 @@
       },
       //  输入框
       'input-blur': (key, value) => {
-        if (value === '') {
-            return
-        }
+        this.$WX.setStorage('isSubmit', false)
         this.optionList.forEach(item => {
           if (item.id === key) {
             item.value = value
@@ -764,26 +871,26 @@
         if (key === 'studentNumber') {
           if (!this.$UTIL.isStudentNumber(value)) {
             this.$WX.toast('请输入正确的学号')
-            this.isRight = false
+            this.flag = false
           }
           this.identityList[0].value = value
-          this.isRight = true
         }
         if (key === 'identityCard') {
           if (!this.$UTIL.isIdentityCard(value)) {
             this.$WX.toast('请输入正确的身份证号码')
-            this.isRight = false
+            this.flag = false
           }
           this.identityList[1].value = value
-          this.isRight = true
         }
         if (key === 'cardNumber') {
           if (!this.$UTIL.isCardNumber(value)) {
              this.$WX.toast('请输入正确的银行卡账号')
-             this.isRight = false
+             this.flag = false
           }
           this.identityList[2].value = value
-          this.isRight = true
+        }
+        if (key === 'bankBranch') {
+          this.identityList[3].value = value
         }
       }
     }

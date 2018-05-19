@@ -45,13 +45,16 @@
   <view class="record-rest">剩余小红花: {{restFlower}}朵</view>
   <ul class="record-ul">
     <repeat for="{{infoList}}" item="item">
-    <li class="record-ul-item">
-      <span>{{item.time}}</span>{{item.name}}<span>{{item.reason}}小红花{{item.amount}}朵</span><span>{{item.mark}}{{item.amount}}</span>
-    </li>
-  </repeat>
+      <li class="record-ul-item">
+        <span>{{item.time}}</span>
+        <span wx:if="{{role === 2}}">{{item.reason}}{{item.name}}小红花{{item.amount}}朵</span>
+        <span wx:if="{{role === 1}}">{{item.name}}{{item.reason}}小红花{{item.amount}}朵</span>
+        <span>{{item.mark}}{{item.amount}}</span>
+      </li>
+    </repeat>
   </ul>
 	<view>
-		<view @tap="loadMore" class="loadMore {{isLast?'destroy':''}}"><span>加载更多</span></view>
+		<view @tap="loadMore" class="loadMore {{isLast?'destroy':''}}"><span wx:if="{{restFlower === '0'}}">加载更多</span></view>
 	</view>
 </template>
 
@@ -60,7 +63,11 @@
 
   export default class record extends page {
     config = {
-      navigationBarTitleText: '我的花迹'
+      navigationBarTitleText: '我的花迹',
+      enablePullDownRefresh: false
+    }
+    data = {
+      role: 2
     }
     components = {}
     getDatas (data) {
@@ -80,11 +87,11 @@
             data.mark = '-'
 					}
 				} else if (item.type === 2) {
-          data.reason = '提现'
-          data.mark = '-'
-				} else if (item.type === 3) {
           data.reason = '充值'
           data.mark = '+'
+				} else if (item.type === 3) {
+          data.reason = '提现'
+          data.mark = '-'
 				}
         this.infoList.push(data)
       })
@@ -100,10 +107,11 @@
     computed = {}
 
     onLoad () {
-			this.restFlower = this.$WX.getStorage('redFlowerNum')
+			this.restFlower = this.$WX.getStorage('redFlowerNum') || 0
       let role = this.$WX.getStorage('role')
 			this.role = role
       if (role === 1) {
+        this.isTutor = false
         this.$API('GetStudentRecord', {page: this.page})
           .then(res => {
             this.totalPage = parseInt(res.msg)
@@ -114,7 +122,8 @@
 						}
 						this.$apply()
           })
-        } else {
+        } else if (role === 2) {
+          this.isTutor = true
           this.$API('GetTutorRecord', {page: this.page})
             .then(res => {
               this.totalPage = res.msg
@@ -130,7 +139,7 @@
     methods = {
 			loadMore () {
 			if (this.page >= this.totalPage) {
-          this.$WX.toast('fuck')
+          this.$WX.toast('没有更多的内容了')
 				}
 			}
 		}

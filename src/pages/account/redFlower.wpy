@@ -81,11 +81,11 @@
 	<image src="../../static/images/personalCenter/background.png" class="background-image"/>
   <view class="redFlower-content">
 		<view class="redFlower-content-modal-1">在这里，小红花是导师与学生连接的纽带，导师可以通过赠送小红花发现并激励人才，学生可以发布简历、文章，展示自己的与众不同。</view>
-		<view class="redFlower-content-modal-2">深圳市海鲸教育基金会将会根据学生获得的小红花况，向学生颁发所在高校的海鲸奖学金，共同创建美好未来。</view>
+		<view class="redFlower-content-modal-2">深圳市海鲸教育基金会将会根据学生获得的小红花情况，向学生颁发所在高校的海鲸奖学金，共同创建美好未来。</view>
 		<view class="redFlower-content-modal-3" wx:if="{{isStudent}}">
 			<view>本年度</view><br/>
 			<view><span> {{tutorsYear}} </span>位导师很欣赏你</view><br/>
-			<view>并给你赠送了<span> {{amountYear}} </span>小红花朵</view><br/>
+			<view>并给你赠送了<span> {{amountYear}} </span>朵小红花</view><br/>
 			<view>你已经申请奖学金<span> {{moneyYear}} </span>元</view><br/>
 			<view>剩余小红花<span> {{restAmount}} </span>朵</view><br/>
 		</view>
@@ -107,7 +107,7 @@
 			<button @tap="buttonClick"><span>申请奖学金</span></button>
 		</view>
 		<view class="redFlower-content-modal-6" wx:if="{{isStudent}}">
-			申请奖学金的最低额度是10朵小红花
+			申请奖学金的最低额度是5朵小红花
 		</view>
 	</view>
 </template>
@@ -121,7 +121,7 @@
 		}
 		components = {}
 		data = {
-			isStudent: true,
+			isStudent: false,
 			tutorsYear: 0,
 			amountYear: 0,
 			moneyYear: 0,
@@ -144,12 +144,10 @@
 			this.moneyAll = data.totalWithdrawMoney || 0
 		}
 		GetTutorDatas (data) {
-			/*
-			this.moneyAll = data.
-			this.studentsAll = data.
-			this.redFlowerSend = data.
-			this.redFlowerRest = data.
-			*/
+			this.moneyAll = data.yearDonateMoney || 0
+			this.studentsAll = data.yearGiftStuNum || 0
+			this.redFlowerSend = data.yearGiftFlowerNum || 0
+			this.redFlowerRest = data.balance || 0
 		}
 		onLoad () {
 			if (this.$WX.getStorage('role') === 1) {
@@ -163,17 +161,14 @@
 				this.isStudent = false
 				this.$API('GetTutorRedFlower')
 					.then(res => {
-						this.GetTutorDatas()
+						this.GetTutorDatas(res.data)
 						this.$apply()
 					})
-			} else {
-				this.$WX.toast('无权访问')
-				this.$WX.jumpTo('./login')
 			}
 		}
 		methods = {
 			buttonClick () {
-				if (this.restAmount >= 10) {
+				if (this.restAmount >= 5) {
 					this.$WX.jumpTo('./scholarship')
 				} else {
 					this.$WX.toast('未到达申请奖学金最低额度')
